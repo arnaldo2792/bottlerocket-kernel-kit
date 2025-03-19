@@ -173,7 +173,6 @@ jq -e '."open-gpu"[] | select(."devid" == "0x2330") | ."features"| index("kernel
 popd
 
 %install
-install -d %{buildroot}%{_cross_libexecdir}
 install -d %{buildroot}%{_cross_libdir}
 install -d %{buildroot}%{_cross_tmpfilesdir}
 install -d %{buildroot}%{_cross_unitdir}
@@ -199,7 +198,7 @@ install -p -m 0644 %{S:204} %{buildroot}%{_cross_factorydir}%{_cross_sysconfdir}
 # Begin NVIDIA tesla driver
 pushd NVIDIA-Linux-%{_cross_arch}-%{tesla_ver}
 # Proprietary driver
-install -d %{buildroot}%{_cross_libexecdir}/nvidia/tesla/bin
+install -d %{buildroot}%{_cross_bindir}
 install -d %{buildroot}%{_cross_libdir}/nvidia/tesla
 install -d %{buildroot}%{_cross_datadir}/nvidia/tesla/module-objects.d
 install -d %{buildroot}%{_cross_factorydir}/nvidia/tesla
@@ -282,14 +281,14 @@ install kernel-open/nvidia-drm.ko %{buildroot}%{_cross_datadir}/nvidia/open-gpu/
 # end open driver
 
 # Binaries
-install -m 755 nvidia-smi %{buildroot}%{_cross_libexecdir}/nvidia/tesla/bin
-install -m 755 nvidia-debugdump %{buildroot}%{_cross_libexecdir}/nvidia/tesla/bin
-install -m 755 nvidia-cuda-mps-control %{buildroot}%{_cross_libexecdir}/nvidia/tesla/bin
-install -m 755 nvidia-cuda-mps-server %{buildroot}%{_cross_libexecdir}/nvidia/tesla/bin
-install -m 755 nvidia-persistenced %{buildroot}%{_cross_libexecdir}/nvidia/tesla/bin/
+install -m 755 nvidia-smi %{buildroot}%{_cross_bindir}
+install -m 755 nvidia-debugdump %{buildroot}%{_cross_bindir}
+install -m 755 nvidia-cuda-mps-control %{buildroot}%{_cross_bindir}
+install -m 755 nvidia-cuda-mps-server %{buildroot}%{_cross_bindir}
+install -m 755 nvidia-persistenced %{buildroot}%{_cross_bindir}
 install -m 4755 nvidia-modprobe %{buildroot}%{_cross_bindir}
 %if "%{_cross_arch}" == "x86_64"
-install -m 755 nvidia-ngx-updater %{buildroot}%{_cross_libexecdir}/nvidia/tesla/bin
+install -m 755 nvidia-ngx-updater %{buildroot}%{_cross_bindir}
 %endif
 
 # Users
@@ -326,8 +325,8 @@ popd
 
 # Begin NVIDIA fabric manager binaries and topologies
 pushd fabricmanager-linux-%{fm_arch}-%{tesla_ver}-archive
-install -p -m 0755 usr/bin/nv-fabricmanager %{buildroot}%{_cross_libexecdir}/nvidia/tesla/bin
-install -p -m 0755 usr/bin/nvswitch-audit %{buildroot}%{_cross_libexecdir}/nvidia/tesla/bin
+install -p -m 0755 usr/bin/nv-fabricmanager %{buildroot}%{_cross_bindir}
+install -p -m 0755 usr/bin/nvswitch-audit %{buildroot}%{_cross_bindir}
 
 install -d %{buildroot}%{_cross_datadir}/nvidia/tesla/nvswitch
 for t in usr/share/nvidia/nvswitch/*_topology ; do
@@ -338,7 +337,6 @@ popd
 
 %files
 %{_cross_attribution_file}
-%dir %{_cross_libexecdir}/nvidia
 %dir %{_cross_libdir}/nvidia
 %dir %{_cross_datadir}/nvidia
 %dir %{_cross_libdir}/modules-load.d
@@ -351,7 +349,6 @@ popd
 %license NVidiaEULAforAWS.pdf
 %license fabricmanager-linux-%{fm_arch}-%{tesla_ver}-archive/usr/share/doc/nvidia-fabricmanager/third-party-notices.txt
 %dir %{_cross_datadir}/nvidia/tesla
-%dir %{_cross_libexecdir}/nvidia/tesla/bin
 %dir %{_cross_libdir}/nvidia/tesla
 %dir %{_cross_libdir}/firmware/nvidia/%{tesla_ver}
 %dir %{_cross_datadir}/nvidia/tesla/module-objects.d
@@ -364,11 +361,11 @@ popd
 %{_cross_unitdir}/load-open-gpu-kernel-modules.service
 
 # Binaries
-%{_cross_libexecdir}/nvidia/tesla/bin/nvidia-debugdump
-%{_cross_libexecdir}/nvidia/tesla/bin/nvidia-smi
-%{_cross_libexecdir}/nvidia/tesla/bin/nv-fabricmanager
-%{_cross_libexecdir}/nvidia/tesla/bin/nvswitch-audit
-%{_cross_libexecdir}/nvidia/tesla/bin/nvidia-persistenced
+%{_cross_bindir}/nvidia-debugdump
+%{_cross_bindir}/nvidia-smi
+%{_cross_bindir}/nv-fabricmanager
+%{_cross_bindir}/nvswitch-audit
+%{_cross_bindir}/nvidia-persistenced
 %{_cross_bindir}/nvidia-modprobe
 
 # nvswitch topologies
@@ -497,10 +494,10 @@ popd
 %exclude %{_cross_datadir}/nvidia/tesla/module-objects.d/nvidia-peermem.o
 %exclude %{_cross_datadir}/nvidia/tesla/module-objects.d/nvidia-drm.mod.o
 %exclude %{_cross_datadir}/nvidia/tesla/module-objects.d/nvidia-drm.o
-%exclude %{_cross_libexecdir}/nvidia/tesla/bin/nvidia-cuda-mps-control
-%exclude %{_cross_libexecdir}/nvidia/tesla/bin/nvidia-cuda-mps-server
+%exclude %{_cross_bindir}/nvidia-cuda-mps-control
+%exclude %{_cross_bindir}/nvidia-cuda-mps-server
 %if "%{_cross_arch}" == "x86_64"
-%exclude %{_cross_libexecdir}/nvidia/tesla/bin/nvidia-ngx-updater
+%exclude %{_cross_bindir}/nvidia-ngx-updater
 %endif
 
 # None of these libraries are required by libnvidia-container, so they
