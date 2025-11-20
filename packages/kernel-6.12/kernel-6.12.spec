@@ -66,6 +66,8 @@ Patch1006: 1006-Select-prerequisites-for-gpu-drivers.patch
 Patch1007: 1007-strscpy-write-destination-buffer-only-once.patch
 # Disable incomplete measurement into PCR 9 on aarch64.
 Patch1008: 1008-efi-libstub-don-t-measure-kernel-command-line-into-P.patch
+# Select backlight for AMG GPU driver
+Patch1009: 1009-drm-amd-display-Add-support-for-minimum-backlight-qu.patch
 
 BuildRequires: bc
 BuildRequires: elfutils-devel
@@ -726,8 +728,6 @@ install -p -m 0644 %{S:301} %{buildroot}%{_cross_bootconfigdir}/05-vmware.conf
 %{_cross_kmoddir}/kernel/drivers/gpu/drm/display/drm_display_helper.%{_ko}
 %{_cross_kmoddir}/kernel/drivers/gpu/drm/ttm/ttm.%{_ko}
 
-%{_cross_kmoddir}/kernel/drivers/gpu/drm/amd/amdgpu/amdgpu.%{_ko}
-%{_cross_kmoddir}/kernel/drivers/gpu/drm/amd/amdxcp/amdxcp.%{_ko}
 %{_cross_kmoddir}/kernel/drivers/gpu/drm/drm_buddy.%{_ko}
 %{_cross_kmoddir}/kernel/drivers/gpu/drm/drm_exec.%{_ko}
 %{_cross_kmoddir}/kernel/drivers/gpu/drm/scheduler/gpu-sched.%{_ko}
