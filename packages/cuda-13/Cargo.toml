@@ -1,0 +1,96 @@
+[package]
+name = "cuda-13"
+version = "0.1.0"
+edition = "2021"
+publish = false
+build = "../build.rs"
+
+[lib]
+path = "../packages.rs"
+
+[package.metadata.build-package]
+releases-url = "https://developer.nvidia.com/cuda-toolkit-archive"
+
+[[package.metadata.build-package.external-files]]
+url = "https://developer.download.nvidia.com/compute/cuda/repos/amzn2023/sbsa/cuda-driver-devel-13-0-13.0.96-1.aarch64.rpm"
+sha512 = "706062e70667e7163287b58c273d08c69546e9de26be18203faad624c2bbba9ba625d621831fe76d18a231776b9044dab5c2a9d80ab9c62011534da800eeb016"
+force-upstream = true
+
+[[package.metadata.build-package.external-files]]
+url = "https://developer.download.nvidia.com/compute/cuda/repos/amzn2023/x86_64/cuda-driver-devel-13-0-13.0.96-1.x86_64.rpm"
+sha512 = "c28aa77a88b677b5c6e859b95ad9bad6b0ad2002810a4ed9f05a44ab2895140e8ecc442fed100e83ea6a5fdfac421e323e55174c695238af32b6b299d00982c0"
+force-upstream = true
+
+[[package.metadata.build-package.external-files]]
+url = "https://developer.download.nvidia.com/compute/cuda/repos/amzn2023/sbsa/libcublas-devel-13-0-13.1.0.3-1.aarch64.rpm"
+sha512 = "0f009e824ac394c943de20699eb0eccb35b29408b2f52f437deb10e65a435357c3605d5d7c8e1ca120a086794c4d395df95db4cd79ded02ac888a05a6d2773cf"
+force-upstream = true
+
+[[package.metadata.build-package.external-files]]
+url = "https://developer.download.nvidia.com/compute/cuda/repos/amzn2023/x86_64/libcublas-devel-13-0-13.1.0.3-1.x86_64.rpm"
+sha512 = "ff5cc755da4b65e36a22e918d8d8090e4221510b925a0210156d1624b40ca943d9fc8d0c521ea61e994064b904b6d575a50bbeaaef9e623e09b844318a601e21"
+force-upstream = true
+
+[[package.metadata.build-package.external-files]]
+url = "https://developer.download.nvidia.com/compute/cuda/repos/amzn2023/sbsa/cuda-cudart-devel-13-0-13.0.96-1.aarch64.rpm"
+sha512 = "ded76feefecd0e9068cdbc318602bc75fd995e2795d1173fc49ab2d0fd610495e6980390cfc08641c600d2332428d6aebe3a5f92e06e12eac1b7218fd9952403"
+force-upstream = true
+
+[[package.metadata.build-package.external-files]]
+url = "https://developer.download.nvidia.com/compute/cuda/repos/amzn2023/x86_64/cuda-cudart-devel-13-0-13.0.96-1.x86_64.rpm"
+sha512 = "ea75ee08edcdeb5905684a9bc7b2fbe7fadde45d3498ef4a4f31f5ec98f094cad9aec6b656a02d9b8faa718428db037345c786d986d05b67629c7483355eb348"
+force-upstream = true
+
+[[package.metadata.build-package.external-files]]
+url = "https://developer.download.nvidia.com/compute/cuda/repos/amzn2023/x86_64/cuda-culibos-devel-13-0-13.0.85-1.x86_64.rpm"
+sha512 = "86476017580bb9287cee05910feb7af3686504628590606811db00a1fa2075649101b7142d7ad3073b35cab0b9059066b287e3dcec1d2007e1acc5b55a62869a"
+force-upstream = true
+
+[[package.metadata.build-package.external-files]]
+url = "https://developer.download.nvidia.com/compute/cuda/repos/amzn2023/sbsa/cuda-culibos-devel-13-0-13.0.85-1.aarch64.rpm"
+sha512 = "ec7c6026dc82f655070558ad4c520503d59c7f980940aac31eccf9c7f8e2ed408398e18718d5e0f218eb59d51bd144ac8250f9e88673163f77a4fcf33c45919b"
+force-upstream = true
+
+[[package.metadata.build-package.external-files]]
+url = "https://developer.download.nvidia.com/compute/cuda/repos/amzn2023/x86_64/cuda-crt-13-0-13.0.88-1.x86_64.rpm"
+sha512 = "4ede71232fbce3289c76ef0f780dd605286812bfb5ec23c92e7993c6d1e6d008f60e9eb89255d68b93ee0d2fc026d5192d4fc20fc0f67d487dcd81030facb64a"
+force-upstream = true
+
+[[package.metadata.build-package.external-files]]
+url = "https://developer.download.nvidia.com/compute/cuda/repos/amzn2023/sbsa/cuda-crt-13-0-13.0.88-1.aarch64.rpm"
+sha512 = "68e6261ac11f84bc87b1abc534dcf9b94c2c8dc78de86112006fb98302a626def956c94755e2478ccee21b9c175fe94c5a92e553fe04aea8916c4e5ca8b4411c"
+force-upstream = true
+
+[[package.metadata.build-package.external-files]]
+url = "https://developer.download.nvidia.com/compute/cuda/repos/amzn2023/sbsa/cuda-cccl-13-0-13.0.85-1.aarch64.rpm"
+sha512 = "a1d02dabf9577cc977a664107e5b157b8c316652be4cc291c200a12492da3f7746c7ee76c03bba496a059ee5301e6aab0a6a85a6c05ffd8a65dc92c6c748e6a9"
+force-upstream = true
+
+[[package.metadata.build-package.external-files]]
+url = "https://developer.download.nvidia.com/compute/cuda/repos/amzn2023/x86_64/cuda-cccl-13-0-13.0.85-1.x86_64.rpm"
+sha512 = "e895e26b3d5e6dc3a5fab8196cab526818c199ffeb3e9f0937bba86115bfc357b8eacf571ec686b18e3e2e46dcce180f81905cd14c21b2bfdb1eef818e9553dc"
+force-upstream = true
+
+[[package.metadata.build-package.external-files]]
+url = "https://developer.download.nvidia.com/compute/cuda/repos/amzn2023/x86_64/cuda-cudart-13-0-13.0.96-1.x86_64.rpm"
+sha512 = "8ad534f70a835d4f251cf72fa91a9bd7499c9a805c75f35e3a7c2575a7ea6b65dd89208aefa33265619149e96fbc605bf4bb8cad5c6b12f3dbb37a9828e7a8d1"
+force-upstream = true
+
+[[package.metadata.build-package.external-files]]
+url = "https://developer.download.nvidia.com/compute/cuda/repos/amzn2023/sbsa/cuda-cudart-13-0-13.0.96-1.aarch64.rpm"
+sha512 = "86d2fbbbd6e4d3cf594f14bd0958f07c857c094d8453b11f558c33f80994bacd07827b237e710e505de9be776557bc8ac3b8707e20f1c38ee056634312889578"
+force-upstream = true
+
+[[package.metadata.build-package.external-files]]
+url = "https://developer.download.nvidia.com/compute/cuda/repos/amzn2023/x86_64/libcublas-13-0-13.1.0.3-1.x86_64.rpm"
+sha512 = "dda5d3b07a615563c33057ae1cad179888b69ee5c44a3030035b4f752e3d4ccb0cc3e647cb9311a42f1b7c45b289aeaf49e06780243710d41644127dc7f43aba"
+force-upstream = true
+
+[[package.metadata.build-package.external-files]]
+url = "https://developer.download.nvidia.com/compute/cuda/repos/amzn2023/sbsa/libcublas-13-0-13.1.0.3-1.aarch64.rpm"
+sha512 = "c971a11237c6fd205fd7541f622b59fdc678c9368b17a2d45ef332816b63b39036512b1c67c58a69ce80cd9fa4b8464d6a2d83702bf0e0cf49a766afd7979e91"
+force-upstream = true
+
+[[package.metadata.build-package.external-files]]
+url = "https://s3.amazonaws.com/EULA/NVidiaEULAforAWS.pdf"
+sha512 = "e1926fe99afc3ab5b2f2744fcd53b4046465aefb2793e2e06c4a19455a3fde895e00af1415ff1a5804c32e6a2ed0657e475de63da6c23a0e9c59feeef52f3f58"

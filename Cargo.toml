@@ -23,5 +23,6 @@ members = [
     "packages/libboost",
     "packages/libplog-devel",
     "packages/libtclap-devel",
+    "packages/cuda-13",
 ]
 exclude = ["sources"]
