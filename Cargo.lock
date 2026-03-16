@@ -96,6 +96,10 @@ name = "libkcapi"
 version = "0.1.0"
 
 [[package]]
+name = "libplog-devel"
+version = "0.1.0"
+
+[[package]]
 name = "libyamlcpp"
 version = "0.1.0"
 

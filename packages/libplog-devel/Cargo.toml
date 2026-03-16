@@ -1,0 +1,19 @@
+[package]
+name = "libplog-devel"
+version = "0.1.0"
+edition = "2021"
+publish = false
+build = "../build.rs"
+
+[lib]
+path = "../packages.rs"
+
+[package.metadata.build-package]
+releases-url = "https://github.com/SergiusTheBest/plog/tags"
+
+[[package.metadata.build-package.external-files]]
+url = "https://github.com/SergiusTheBest/plog/archive/1.1.11/plog-1.1.11.tar.gz"
+path = "plog-1.1.11.tar.gz"
+sha512 = "b51b83a2b478a54d83333590a4f157e3fdeea08903486249d537811afef370ce9968197efb534f2b4084a5a7a7253e5e2d7e191d602451ea625d645a39f195dc"
+
+[build-dependencies]

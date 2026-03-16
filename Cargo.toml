@@ -21,5 +21,6 @@ members = [
     "packages/libyamlcpp",
     "packages/libfmt",
     "packages/libboost",
+    "packages/libplog-devel",
 ]
 exclude = ["sources"]
