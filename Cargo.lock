@@ -100,6 +100,10 @@ name = "libplog-devel"
 version = "0.1.0"
 
 [[package]]
+name = "libtclap-devel"
+version = "0.1.0"
+
+[[package]]
 name = "libyamlcpp"
 version = "0.1.0"
 

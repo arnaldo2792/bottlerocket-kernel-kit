@@ -22,5 +22,6 @@ members = [
     "packages/libfmt",
     "packages/libboost",
     "packages/libplog-devel",
+    "packages/libtclap-devel",
 ]
 exclude = ["sources"]

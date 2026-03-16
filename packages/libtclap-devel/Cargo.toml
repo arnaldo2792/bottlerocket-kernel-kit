@@ -1,0 +1,18 @@
+[package]
+name = "libtclap-devel"
+version = "0.1.0"
+edition = "2021"
+publish = false
+build = "../build.rs"
+
+[lib]
+path = "../packages.rs"
+
+[package.metadata.build-package]
+releases-url = "https://sourceforge.net/projects/tclap/files/"
+
+[[package.metadata.build-package.external-files]]
+url = "https://github.com/mirror/tclap/archive/82abdc943e23b2f91678fb86c436962182ca9a29/tclap.tar.gz"
+sha512 = "ce05e3baf605b73f899fe5d85dfeb1b3e51b7014e27b40fe2d7b952c0d5101e94a087c49e4607fecc045a7506893b96533efc9b21f27e2bbc8b0d9b9e93748fa"
+
+[build-dependencies]
