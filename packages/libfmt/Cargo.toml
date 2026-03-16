@@ -1,0 +1,18 @@
+[package]
+name = "libfmt"
+version = "0.1.0"
+edition = "2021"
+publish = false
+build = "../build.rs"
+
+[lib]
+path = "../packages.rs"
+
+[package.metadata.build-package]
+releases-url = "https://github.com/fmtlib/fmt/tags"
+
+[[package.metadata.build-package.external-files]]
+url = "https://github.com/fmtlib/fmt/archive/10.2.1/fmt-10.2.1.tar.gz"
+sha512 = "27df90c681ec37e55625062a79e3b83589b6d7e94eff37a3b412bb8c1473f757a8adb727603acc9185c3490628269216843b7d7bd5a3cb37f0029da5d1495ffa"
+
+[build-dependencies]
