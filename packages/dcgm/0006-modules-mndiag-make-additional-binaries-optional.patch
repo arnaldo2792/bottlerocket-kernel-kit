@@ -1,0 +1,158 @@
+From aee932dcb7fa57967f6589a76e9fc20f8013cf7e Mon Sep 17 00:00:00 2001
+From: Arnaldo Garcia Rincon <agarrcia@amazon.com>
+Date: Fri, 13 Mar 2026 20:40:50 +0000
+Subject: [PATCH] modules/mndiag: make additional binaries optional
+
+Signed-off-by: Arnaldo Garcia Rincon <agarrcia@amazon.com>
+---
+ modules/mndiag/CMakeLists.txt | 94 +++++++++++++++++++++--------------
+ 1 file changed, 56 insertions(+), 38 deletions(-)
+
+diff --git a/modules/mndiag/CMakeLists.txt b/modules/mndiag/CMakeLists.txt
+index 64261e2..f45aacf 100755
+--- a/modules/mndiag/CMakeLists.txt
++++ b/modules/mndiag/CMakeLists.txt
+@@ -93,6 +93,8 @@ target_sources(dcgmmodulemndiag
+     PRIVATE
+         ${SRCS})
+ 
++option(DCGM_BUILD_MULTINODE "Build multinode diagnostic components" ON)
++
+ if(12 IN_LIST Cuda_SUPPORTED_VERSIONS)
+     install(
+         FILES cuda12/${CMAKE_SYSTEM_PROCESSOR}/libcurand.so.10.3.10.19
+@@ -121,17 +123,19 @@ if(12 IN_LIST Cuda_SUPPORTED_VERSIONS)
+             COMMAND_ERROR_IS_FATAL ANY)"
+         COMPONENT Cuda12)
+ 
+-    install(
+-        PROGRAMS cuda12/${CMAKE_SYSTEM_PROCESSOR}/mnubergemm
+-        DESTINATION "${CMAKE_INSTALL_LIBEXECDIR}/${PROJECT_NAME}/plugins/cuda12/"
+-        COMPONENT Multinode_Cuda12)
++    if(DCGM_BUILD_MULTINODE)
++        install(
++            PROGRAMS cuda12/${CMAKE_SYSTEM_PROCESSOR}/mnubergemm
++            DESTINATION "${CMAKE_INSTALL_LIBEXECDIR}/${PROJECT_NAME}/plugins/cuda12/"
++            COMPONENT Multinode_Cuda12)
+ 
+-    install(CODE "
+-        file(RPATH_CHANGE
+-            FILE \"\$ENV{DESTDIR}$<INSTALL_PREFIX>/${CMAKE_INSTALL_LIBEXECDIR}/datacenter-gpu-manager-4/plugins/cuda12/mnubergemm\"
+-            OLD_RPATH \"::::::::::::::::::::::::::::::::::::::::::::::::::::\"
+-            NEW_RPATH \"$ORIGIN:$ORIGIN/../../../../${CMAKE_INSTALL_LIBDIR}\")"
+-        COMPONENT Multinode_Cuda12)
++        install(CODE "
++            file(RPATH_CHANGE
++                FILE \"\$ENV{DESTDIR}$<INSTALL_PREFIX>/${CMAKE_INSTALL_LIBEXECDIR}/datacenter-gpu-manager-4/plugins/cuda12/mnubergemm\"
++                OLD_RPATH \"::::::::::::::::::::::::::::::::::::::::::::::::::::\"
++                NEW_RPATH \"$ORIGIN:$ORIGIN/../../../../${CMAKE_INSTALL_LIBDIR}\")"
++            COMPONENT Multinode_Cuda12)
++    endif()
+ endif()
+ 
+ if(13 IN_LIST Cuda_SUPPORTED_VERSIONS)
+@@ -162,36 +166,44 @@ if(13 IN_LIST Cuda_SUPPORTED_VERSIONS)
+             COMMAND_ERROR_IS_FATAL ANY)"
+         COMPONENT Cuda13)
+ 
+-    install(
+-        PROGRAMS cuda13/${CMAKE_SYSTEM_PROCESSOR}/mnubergemm
+-        DESTINATION "${CMAKE_INSTALL_LIBEXECDIR}/${PROJECT_NAME}/plugins/cuda13"
+-        COMPONENT Multinode_Cuda13)
++    if(DCGM_BUILD_MULTINODE)
++        install(
++            PROGRAMS cuda13/${CMAKE_SYSTEM_PROCESSOR}/mnubergemm
++            DESTINATION "${CMAKE_INSTALL_LIBEXECDIR}/${PROJECT_NAME}/plugins/cuda13"
++            COMPONENT Multinode_Cuda13)
+ 
+-    install(CODE "
+-        file(RPATH_CHANGE
+-            FILE \"\$ENV{DESTDIR}$<INSTALL_PREFIX>/libexec/datacenter-gpu-manager-4/plugins/cuda13/mnubergemm\"
+-            OLD_RPATH \"::::::::::::::::::::::::::::::::::::::::::::::::::::\"
+-            NEW_RPATH \"$ORIGIN:$ORIGIN/../../../../${CMAKE_INSTALL_LIBDIR}\")"
+-        COMPONENT Multinode_Cuda13)
++        install(CODE "
++            file(RPATH_CHANGE
++                FILE \"\$ENV{DESTDIR}$<INSTALL_PREFIX>/libexec/datacenter-gpu-manager-4/plugins/cuda13/mnubergemm\"
++                OLD_RPATH \"::::::::::::::::::::::::::::::::::::::::::::::::::::\"
++                NEW_RPATH \"$ORIGIN:$ORIGIN/../../../../${CMAKE_INSTALL_LIBDIR}\")"
++            COMPONENT Multinode_Cuda13)
++    endif()
+ endif()
+ 
+ if(12 IN_LIST Cuda_SUPPORTED_VERSIONS)
+-    install(
+-        PROGRAMS cuda12/${CMAKE_SYSTEM_PROCESSOR}/mnubergemm
+-        DESTINATION ${DCGM_TESTS_INSTALL_DIR}/apps/nvvs/plugins/cuda12
+-        COMPONENT Tests)
++    if(DCGM_BUILD_MULTINODE)
++        install(
++            PROGRAMS cuda12/${CMAKE_SYSTEM_PROCESSOR}/mnubergemm
++            DESTINATION ${DCGM_TESTS_INSTALL_DIR}/apps/nvvs/plugins/cuda12
++            COMPONENT Tests)
++    endif()
+ 
+     install(
+         FILES cuda12/${CMAKE_SYSTEM_PROCESSOR}/libcurand.so.10.3.10.19
+         DESTINATION ${DCGM_TESTS_INSTALL_DIR}/apps/nvvs/plugins/cuda12
+         COMPONENT Tests)
+ 
+-    install(CODE "
+-        file(RPATH_CHANGE
+-            FILE \"\$ENV{DESTDIR}$<INSTALL_PREFIX>/${DCGM_TESTS_INSTALL_DIR}/apps/nvvs/plugins/cuda12/mnubergemm\"
+-            OLD_RPATH \"::::::::::::::::::::::::::::::::::::::::::::::::::::\"
+-            NEW_RPATH \"$ORIGIN:$ORIGIN/../../../${DCGM_TESTS_ARCH}\")
++    if(DCGM_BUILD_MULTINODE)
++        install(CODE "
++            file(RPATH_CHANGE
++                FILE \"\$ENV{DESTDIR}$<INSTALL_PREFIX>/${DCGM_TESTS_INSTALL_DIR}/apps/nvvs/plugins/cuda12/mnubergemm\"
++                OLD_RPATH \"::::::::::::::::::::::::::::::::::::::::::::::::::::\"
++                NEW_RPATH \"$ORIGIN:$ORIGIN/../../../${DCGM_TESTS_ARCH}\")"
++            COMPONENT Tests)
++    endif()
+ 
++    install(CODE "
+         execute_process(
+             COMMAND \"${CMAKE_COMMAND}\" -E create_symlink libcurand.so.10.3.10.19 libcurand.so.10
+             COMMAND \"${CMAKE_COMMAND}\" -E make_directory updated
+@@ -211,22 +223,28 @@ if(12 IN_LIST Cuda_SUPPORTED_VERSIONS)
+ endif()
+ 
+ if(13 IN_LIST Cuda_SUPPORTED_VERSIONS)
+-    install(
+-        PROGRAMS cuda13/${CMAKE_SYSTEM_PROCESSOR}/mnubergemm
+-        DESTINATION ${DCGM_TESTS_INSTALL_DIR}/apps/nvvs/plugins/cuda13
+-        COMPONENT Tests)
++    if(DCGM_BUILD_MULTINODE)
++        install(
++            PROGRAMS cuda13/${CMAKE_SYSTEM_PROCESSOR}/mnubergemm
++            DESTINATION ${DCGM_TESTS_INSTALL_DIR}/apps/nvvs/plugins/cuda13
++            COMPONENT Tests)
++    endif()
+ 
+     install(
+         FILES cuda13/${CMAKE_SYSTEM_PROCESSOR}/libcurand.so.10.4.0.35
+         DESTINATION ${DCGM_TESTS_INSTALL_DIR}/apps/nvvs/plugins/cuda13
+         COMPONENT Tests)
+ 
+-    install(CODE "
+-        file(RPATH_CHANGE
+-            FILE \"\$ENV{DESTDIR}$<INSTALL_PREFIX>/${DCGM_TESTS_INSTALL_DIR}/apps/nvvs/plugins/cuda13/mnubergemm\"
+-            OLD_RPATH \"::::::::::::::::::::::::::::::::::::::::::::::::::::\"
+-            NEW_RPATH \"$ORIGIN:$ORIGIN/../../../${DCGM_TESTS_ARCH}\")
++    if(DCGM_BUILD_MULTINODE)
++        install(CODE "
++            file(RPATH_CHANGE
++                FILE \"\$ENV{DESTDIR}$<INSTALL_PREFIX>/${DCGM_TESTS_INSTALL_DIR}/apps/nvvs/plugins/cuda13/mnubergemm\"
++                OLD_RPATH \"::::::::::::::::::::::::::::::::::::::::::::::::::::\"
++                NEW_RPATH \"$ORIGIN:$ORIGIN/../../../${DCGM_TESTS_ARCH}\")"
++            COMPONENT Tests)
++    endif()
+ 
++    install(CODE "
+         execute_process(
+             COMMAND \"${CMAKE_COMMAND}\" -E create_symlink libcurand.so.10.4.0.35 libcurand.so.10
+             COMMAND \"${CMAKE_COMMAND}\" -E make_directory updated
+-- 
+2.52.0
+

@@ -1,0 +1,48 @@
+From 9cad62f4d502d12a2f18310adf55c0b89bf2362f Mon Sep 17 00:00:00 2001
+From: Arnaldo Garcia Rincon <agarrcia@amazon.com>
+Date: Thu, 12 Mar 2026 23:33:09 +0000
+Subject: [PATCH] cmake: guard stub_library_test behind BUILD_TESTING
+
+---
+ CMakeLists.txt         | 2 +-
+ testing/CMakeLists.txt | 4 +++-
+ 2 files changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index fd4aa49..9fb52c9 100755
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -276,6 +276,7 @@ if (BUILD_TESTING)
+     add_library(testing_cuda_stubs STATIC)
+     add_library(testing_cuda_stubs_interface INTERFACE)
+     add_library(testing_dcgm_cublas_stubs STATIC)
++    add_executable(stub_library_test)
+ endif()
+ 
+ foreach(CUDA_VER IN LISTS Cuda_SUPPORTED_VERSIONS)
+@@ -287,7 +288,6 @@ foreach(CUDA_VER IN LISTS Cuda_SUPPORTED_VERSIONS)
+ endforeach()
+ add_executable(nv-hostengine)
+ add_executable(nvvs)
+-add_executable(stub_library_test)
+ 
+ add_library(config_interface INTERFACE)
+ add_library(diag_interface INTERFACE)
+diff --git a/testing/CMakeLists.txt b/testing/CMakeLists.txt
+index 5f000f8..dfebb99 100644
+--- a/testing/CMakeLists.txt
++++ b/testing/CMakeLists.txt
+@@ -72,7 +72,9 @@ target_compile_definitions(testdcgmunittests PRIVATE -DTEST_DCGMCACHEMANAGER)
+ target_link_options(testdcgmunittests PRIVATE
+     "-Wl,--version-script,${CMAKE_CURRENT_SOURCE_DIR}/unittests.linux_def")
+ 
+-add_subdirectory(stub)
++if (BUILD_TESTING)
++    add_subdirectory(stub)
++endif()
+ 
+ configure_file(python3/version.py.in version.py ESCAPE_QUOTES @ONLY)
+ 
+-- 
+2.52.0
+

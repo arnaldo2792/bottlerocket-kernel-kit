@@ -1,0 +1,226 @@
+From eaa7ddb4af1be0037d2560d7634efa2ae9b32291 Mon Sep 17 00:00:00 2001
+From: Arnaldo Garcia Rincon <agarrcia@amazon.com>
+Date: Wed, 4 Mar 2026 06:44:59 +0000
+Subject: [PATCH] Fix compiler warnings
+
+Signed-off-by: Arnaldo Garcia Rincon <agarrcia@amazon.com>
+---
+ common/DcgmError.h                            |  3 +++
+ common/DcgmUtilities.cpp                      |  6 ++---
+ common/gettid.h                               |  2 ++
+ dcgmlib/src/DcgmApi.cpp                       |  4 +---
+ modules/diag/DcgmDiagResponseWrapper.h        |  1 +
+ modules/mndiag/MnDiagProcessUtils.h           |  2 +-
+ modules/sysmon/DcgmSystemMonitor.h            | 24 +++++++++----------
+ .../nvbandwidth/NVBandwidthPlugin.cpp         |  6 ++---
+ nvvs/src/DcgmSystem.cpp                       |  2 +-
+ nvvs/src/TestFramework.cpp                    |  2 +-
+ sdk/nvidia/nvml/common/hashtable.c            |  2 +-
+ .../nvml/common/measurementcollection.c       |  2 +-
+ 12 files changed, 29 insertions(+), 27 deletions(-)
+
+diff --git a/common/DcgmError.h b/common/DcgmError.h
+index 87ded8a..4f02c7c 100755
+--- a/common/DcgmError.h
++++ b/common/DcgmError.h
+@@ -251,7 +251,10 @@ private:
+     {                                                                              \
+         char buf_2M8SD15I[1024];                                                   \
+         const char *fmt_2M8SD15I = dcgmGetErrorMeta(errCode)->msgFormat;           \
++        _Pragma("GCC diagnostic push")                                            \
++        _Pragma("GCC diagnostic ignored \"-Wformat-security\"")                   \
+         snprintf(buf_2M8SD15I, sizeof(buf_2M8SD15I), fmt_2M8SD15I, ##__VA_ARGS__); \
++        _Pragma("GCC diagnostic pop")                                              \
+         errorObj.SetMessage(buf_2M8SD15I);                                         \
+         errorObj.SetNextSteps(dcgmGetErrorMeta(errCode)->suggestion);              \
+         errorObj.SetCode(errCode);                                                 \
+diff --git a/common/DcgmUtilities.cpp b/common/DcgmUtilities.cpp
+index 9909fb4..134e4bf 100644
+--- a/common/DcgmUtilities.cpp
++++ b/common/DcgmUtilities.cpp
+@@ -873,15 +873,13 @@ dcgmReturn_t RunCmdAndGetOutput(std::string const &cmd, std::string &output)
+     int readOutputRet = DcgmNs::Utils::ReadProcessOutput(stdoutStream, std::move(outputFd));
+     if (readOutputRet)
+     {
+-        strerror_r(readOutputRet, errbuf, sizeof(errbuf));
+-        errmsg = fmt::format("Output of '{}' couldn't be read: '{}'. ", cmd, errbuf);
++        errmsg = fmt::format("Output of '{}' couldn't be read: '{}'. ", cmd, strerror_r(readOutputRet, errbuf, sizeof(errbuf)));
+     }
+ 
+     int childStatus;
+     if (waitpid(childPid, &childStatus, 0) == -1)
+     {
+-        strerror_r(errno, errbuf, sizeof(errbuf));
+-        errmsg += fmt::format("\nError while waiting for child process ({}) to exit: '{}'", childPid, errbuf);
++        errmsg += fmt::format("\nError while waiting for child process ({}) to exit: '{}'", childPid, strerror_r(errno, errbuf, sizeof(errbuf)));
+     }
+     else if (WIFEXITED(childStatus))
+     {
+diff --git a/common/gettid.h b/common/gettid.h
+index f441925..08af20e 100644
+--- a/common/gettid.h
++++ b/common/gettid.h
+@@ -26,4 +26,6 @@
+  * @return The thread ID of the current thread
+  */
+ pid_t gettid(void);
++#else
++#include <unistd.h>
+ #endif
+diff --git a/dcgmlib/src/DcgmApi.cpp b/dcgmlib/src/DcgmApi.cpp
+index b0ded35..d7f905a 100644
+--- a/dcgmlib/src/DcgmApi.cpp
++++ b/dcgmlib/src/DcgmApi.cpp
+@@ -5698,10 +5698,8 @@ dcgmReturn_t StartEmbeddedV2(dcgmStartEmbeddedV2Params_v1 &params)
+         if (chdir(homeDir))
+         {
+             char errbuf[1024];
+-            strerror_r(errno, errbuf, sizeof(errbuf));
+-
+             std::string cwd(std::filesystem::current_path());
+-            homeDirMsg = fmt::format("Couldn't change to directory '{}' from '{}': {}.", homeDir, cwd, errbuf);
++            homeDirMsg = fmt::format("Couldn't change to directory '{}' from '{}': {}.", homeDir, cwd, strerror_r(errno, errbuf, sizeof(errbuf)));
+             chdirFail  = true;
+         }
+     }
+diff --git a/modules/diag/DcgmDiagResponseWrapper.h b/modules/diag/DcgmDiagResponseWrapper.h
+index 42e3602..935b3db 100644
+--- a/modules/diag/DcgmDiagResponseWrapper.h
++++ b/modules/diag/DcgmDiagResponseWrapper.h
+@@ -22,6 +22,7 @@
+ #include <DcgmLogging.h>
+ #include <DiagResponseUtils.h>
+ #include <json/json.h>
++#include <span>
+ #include <string>
+ 
+ extern const std::string_view denylistName;
+diff --git a/modules/mndiag/MnDiagProcessUtils.h b/modules/mndiag/MnDiagProcessUtils.h
+index 7d735a0..fa527a1 100644
+--- a/modules/mndiag/MnDiagProcessUtils.h
++++ b/modules/mndiag/MnDiagProcessUtils.h
+@@ -73,7 +73,7 @@ public:
+     {
+         constexpr size_t MAX_OUTPUT_SIZE = 4 * 1024; // 4KB limit
+ 
+-        std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd.c_str(), "r"), pclose);
++        std::unique_ptr<FILE, int(*)(FILE*)> pipe(popen(cmd.c_str(), "r"), pclose);
+         if (!pipe)
+         {
+             throw std::runtime_error("popen() failed for command: " + cmd);
+diff --git a/modules/sysmon/DcgmSystemMonitor.h b/modules/sysmon/DcgmSystemMonitor.h
+index c2811e6..14ef441 100644
+--- a/modules/sysmon/DcgmSystemMonitor.h
++++ b/modules/sysmon/DcgmSystemMonitor.h
+@@ -20,20 +20,20 @@
+ 
+ #include <dcgm_structs.h>
+ 
+-#define SYSMON_LOG_IFSTREAM_DEBUG(path, pathDescription)                                          \
+-    do                                                                                            \
+-    {                                                                                             \
+-        char errbuf[DCGM_MAX_STR_LENGTH] = { 0 };                                                 \
+-        strerror_r(errno, errbuf, sizeof(errbuf));                                                \
+-        log_debug("Couldn't open {} file '{}' for reading: '{}'", pathDescription, path, errbuf); \
++#define SYSMON_LOG_IFSTREAM_DEBUG(path, pathDescription)                                               \
++    do                                                                                                 \
++    {                                                                                                  \
++        char errbuf[DCGM_MAX_STR_LENGTH] = { 0 };                                                      \
++        char *errstr                     = strerror_r(errno, errbuf, sizeof(errbuf));                  \
++        log_debug("Couldn't open {} file '{}' for reading: '{}'", pathDescription, path, errstr);      \
+     } while (0)
+ 
+-#define SYSMON_LOG_IFSTREAM_ERROR(path, pathDescription)                                          \
+-    do                                                                                            \
+-    {                                                                                             \
+-        char errbuf[DCGM_MAX_STR_LENGTH] = { 0 };                                                 \
+-        strerror_r(errno, errbuf, sizeof(errbuf));                                                \
+-        log_error("Couldn't open {} file '{}' for reading: '{}'", pathDescription, path, errbuf); \
++#define SYSMON_LOG_IFSTREAM_ERROR(path, pathDescription)                                               \
++    do                                                                                                 \
++    {                                                                                                  \
++        char errbuf[DCGM_MAX_STR_LENGTH] = { 0 };                                                      \
++        char *errstr                     = strerror_r(errno, errbuf, sizeof(errbuf));                  \
++        log_error("Couldn't open {} file '{}' for reading: '{}'", pathDescription, path, errstr);      \
+     } while (0)
+ 
+ typedef enum dcgmPowerFileType_enum
+diff --git a/nvvs/plugin_src/nvbandwidth/NVBandwidthPlugin.cpp b/nvvs/plugin_src/nvbandwidth/NVBandwidthPlugin.cpp
+index 084bc4e..cd33522 100644
+--- a/nvvs/plugin_src/nvbandwidth/NVBandwidthPlugin.cpp
++++ b/nvvs/plugin_src/nvbandwidth/NVBandwidthPlugin.cpp
+@@ -147,8 +147,8 @@ void NVBandwidthPlugin::Cleanup()
+         if (rc)
+         {
+             char errbuf[DCGM_MAX_STR_LENGTH];
+-            strerror_r(errno, errbuf, sizeof(errbuf));
+-            log_warning("Couldn't restore CUDA_VISIBLE_DEVICES to {} ({}).", m_originalCudaVisibleDevices, errbuf);
++            char *errstr = strerror_r(errno, errbuf, sizeof(errbuf));
++            log_warning("Couldn't restore CUDA_VISIBLE_DEVICES to {} ({}).", m_originalCudaVisibleDevices, errstr);
+         }
+     }
+     else
+@@ -161,7 +161,7 @@ void NVBandwidthPlugin::Cleanup()
+         if (rc)
+         {
+             char errbuf[DCGM_MAX_STR_LENGTH];
+-            strerror_r(errno, errbuf, sizeof(errbuf));
++            (void)strerror_r(errno, errbuf, sizeof(errbuf));
+             log_warning("Couldn't unset CUDA_VISIBLE_DEVICES ({}).", errbuf);
+         }
+     }
+diff --git a/nvvs/src/DcgmSystem.cpp b/nvvs/src/DcgmSystem.cpp
+index ffed68e..f6c6d66 100644
+--- a/nvvs/src/DcgmSystem.cpp
++++ b/nvvs/src/DcgmSystem.cpp
+@@ -276,7 +276,7 @@ dcgmReturn_t DcgmSystem::GetLatestValuesForGpus(const std::vector<unsigned int>
+                 break;
+ 
+             case DCGM_FT_STRING:
+-                snprintf(val_copy.value.str, sizeof(val_copy.value.str), values[i].value.str);
++                snprintf(val_copy.value.str, sizeof(val_copy.value.str), "%s", values[i].value.str);
+                 break;
+ 
+             case DCGM_FT_BINARY:
+diff --git a/nvvs/src/TestFramework.cpp b/nvvs/src/TestFramework.cpp
+index 1b5d412..8d2b78c 100644
+--- a/nvvs/src/TestFramework.cpp
++++ b/nvvs/src/TestFramework.cpp
+@@ -516,7 +516,7 @@ void TestFramework::LoadPluginWithDir(std::string const &pluginDir)
+         ~ResetWorkingDirectory()
+         {
+             // Previous implementation did not account for possible failure. Deferring error handling
+-            chdir(path);
++            (void)chdir(path);
+         }
+     } resetWorkingDirectory { oldPath };
+ 
+diff --git a/sdk/nvidia/nvml/common/hashtable.c b/sdk/nvidia/nvml/common/hashtable.c
+index 7b76151..8c517ca 100644
+--- a/sdk/nvidia/nvml/common/hashtable.c
++++ b/sdk/nvidia/nvml/common/hashtable.c
+@@ -59,7 +59,7 @@ static unsigned int primes[]
+     = { 5,       13,       23,       53,       97,        193,       389,       769,       1543,      3079,
+         6151,    12289,    24593,    49157,    98317,     196613,    393241,    786433,    1572869,   3145739,
+         6291469, 12582917, 25165843, 50331653, 100663319, 201326611, 402653189, 805306457, 1610612741 };
+-static const unsigned int num_primes = sizeof(primes) / sizeof(unsigned int);
++static const unsigned int num_primes __attribute__((unused)) = sizeof(primes) / sizeof(unsigned int);
+ 
+ static unsigned int num_buckets(hashtable_t *hashtable)
+ {
+diff --git a/sdk/nvidia/nvml/common/measurementcollection.c b/sdk/nvidia/nvml/common/measurementcollection.c
+index f994405..fe45202 100644
+--- a/sdk/nvidia/nvml/common/measurementcollection.c
++++ b/sdk/nvidia/nvml/common/measurementcollection.c
+@@ -464,7 +464,7 @@ unsigned int mcollect_size(mcollect_p mcollect)
+     return mcollect->hashTable.size;
+ }
+ 
+-static int mcollect_timeseries_size_cb(char *key, mcollect_value_p value, void *userData)
++__attribute__((unused)) static int mcollect_timeseries_size_cb(char *key, mcollect_value_p value, void *userData)
+ {
+     long long *bytesUsed = (long long *)userData;
+ 
+-- 
+2.52.0
+

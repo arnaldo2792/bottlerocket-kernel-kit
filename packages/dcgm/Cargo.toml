@@ -1,0 +1,27 @@
+[package]
+name = "dcgm"
+version = "0.1.0"
+edition = "2021"
+publish = false
+build = "../build.rs"
+
+[lib]
+path = "../packages.rs"
+
+[package.metadata.build-package]
+package-name = "dcgm"
+releases-url = "https://github.com/NVIDIA/DCGM/releases"
+
+[[package.metadata.build-package.external-files]]
+url = "https://github.com/NVIDIA/DCGM/archive/v4.4.2/DCGM-v4.4.2.tar.gz"
+sha512 = "5715ea021f2e8942bb972e4d2c3fef5adac395458c8a36f85110526af5362682cd0757a0c0c031d63d24c97a2f16ae7a267401d4a5fee7da1f8ae03eb3f0d0a3"
+
+[build-dependencies]
+cuda-13 = { path = "../cuda-13" }
+libboost = { path = "../libboost" }
+libevent = { path = "../libevent" }
+libfmt = { path = "../libfmt" }
+libjsoncpp = { path = "../libjsoncpp" }
+libplog-devel = { path = "../libplog-devel" }
+libtclap-devel = { path = "../libtclap-devel" }
+libyamlcpp = { path = "../libyamlcpp" }

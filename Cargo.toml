@@ -25,5 +25,6 @@ members = [
     "packages/libtclap-devel",
     "packages/cuda-13",
     "packages/libnvidia-nscq-580",
+    "packages/dcgm",
 ]
 exclude = ["sources"]

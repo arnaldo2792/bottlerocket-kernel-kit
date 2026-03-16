@@ -1,0 +1,9 @@
+[Unit]
+Description=NVIDIA DCGM
+
+[Service]
+Environment="DCGM_HOME_DIR=/var/log/nvidia-dcgm"
+ExecStart=/usr/bin/nv-hostengine -n --service-account nvidia-dcgm -f -
+
+[Install]
+WantedBy=multi-user.target

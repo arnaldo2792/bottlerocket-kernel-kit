@@ -1,0 +1,97 @@
+From 22897c8a637b8713c707c646f5b4c946b5fee050 Mon Sep 17 00:00:00 2001
+From: Arnaldo Garcia Rincon <agarrcia@amazon.com>
+Date: Wed, 4 Mar 2026 06:31:24 +0000
+Subject: [PATCH] Fix missing include headers
+
+Signed-off-by: Arnaldo Garcia Rincon <agarrcia@amazon.com>
+---
+ common/DcgmStringHelpers.cpp           | 1 +
+ nvvs/include/DcgmNvvsResponseWrapper.h | 1 +
+ nvvs/include/IgnoreErrorCodesHelper.h  | 1 +
+ nvvs/include/PluginInterface.h         | 3 ++-
+ nvvs/src/PluginTest.cpp                | 1 +
+ nvvs/src/TestFramework.cpp             | 1 +
+ 6 files changed, 7 insertions(+), 1 deletion(-)
+
+diff --git a/common/DcgmStringHelpers.cpp b/common/DcgmStringHelpers.cpp
+index 830a1fa..2eeab95 100644
+--- a/common/DcgmStringHelpers.cpp
++++ b/common/DcgmStringHelpers.cpp
+@@ -21,6 +21,7 @@
+ #include <set>
+ #include <string>
+ #include <string_view>
++#include <algorithm>
+ 
+ /*****************************************************************************/
+ void dcgmTokenizeString(const std::string &src, const std::string &delimiter, std::vector<std::string> &tokens)
+diff --git a/nvvs/include/DcgmNvvsResponseWrapper.h b/nvvs/include/DcgmNvvsResponseWrapper.h
+index ec4803d..f62ba76 100644
+--- a/nvvs/include/DcgmNvvsResponseWrapper.h
++++ b/nvvs/include/DcgmNvvsResponseWrapper.h
+@@ -26,6 +26,7 @@
+ #include <string_view>
+ #include <variant>
+ #include <vector>
++#include <span>
+ 
+ class DcgmNvvsResponseWrapper
+ {
+diff --git a/nvvs/include/IgnoreErrorCodesHelper.h b/nvvs/include/IgnoreErrorCodesHelper.h
+index 4c94581..5bcc034 100644
+--- a/nvvs/include/IgnoreErrorCodesHelper.h
++++ b/nvvs/include/IgnoreErrorCodesHelper.h
+@@ -23,6 +23,7 @@
+ #include <map>
+ #include <string>
+ #include <unordered_set>
++#include <optional>
+ 
+ using gpuIgnoreErrorCodeMap_t = std::map<dcgmGroupEntityPair_t, std::unordered_set<unsigned int>>;
+ 
+diff --git a/nvvs/include/PluginInterface.h b/nvvs/include/PluginInterface.h
+index 25edf46..ef22d72 100644
+--- a/nvvs/include/PluginInterface.h
++++ b/nvvs/include/PluginInterface.h
+@@ -26,6 +26,7 @@
+ #include <string>
+ #include <unordered_map>
+ #include <vector>
++#include <algorithm>
+ #endif
+ 
+ #ifdef __cplusplus
+@@ -400,4 +401,4 @@ typedef void (*dcgmDiagRetrieveResults_f)(char const *testName,
+ } // END extern "C"
+ #endif
+ 
+-#endif // NVVS_PLUGIN_INTERFACE_H
+\ No newline at end of file
++#endif // NVVS_PLUGIN_INTERFACE_H
+diff --git a/nvvs/src/PluginTest.cpp b/nvvs/src/PluginTest.cpp
+index d58886d..519fa12 100644
+--- a/nvvs/src/PluginTest.cpp
++++ b/nvvs/src/PluginTest.cpp
+@@ -17,6 +17,7 @@
+ #include "PluginTest.h"
+ 
+ #include <DcgmStringHelpers.h>
++#include <span>
+ 
+ namespace
+ {
+diff --git a/nvvs/src/TestFramework.cpp b/nvvs/src/TestFramework.cpp
+index 37520d6..1b5d412 100644
+--- a/nvvs/src/TestFramework.cpp
++++ b/nvvs/src/TestFramework.cpp
+@@ -49,6 +49,7 @@
+ #include <sys/types.h>
+ #include <unistd.h>
+ #include <vector>
++#include <format>
+ 
+ extern DcgmSystem dcgmSystem;
+ extern DcgmHandle dcgmHandle;
+-- 
+2.52.0
+

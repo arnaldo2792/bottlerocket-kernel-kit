@@ -1,0 +1,1023 @@
+From e79c06253327e58b9d79940c59bf750054d49034 Mon Sep 17 00:00:00 2001
+From: Arnaldo Garcia Rincon <agarrcia@amazon.com>
+Date: Wed, 4 Mar 2026 02:14:15 +0000
+Subject: [PATCH] FindCuda: build plugins only for the CUDA versions found
+
+Signed-off-by: Arnaldo Garcia Rincon <agarrcia@amazon.com>
+---
+ CMakeLists.txt                             | 452 ++++++++-------------
+ cmake/FindCuda.cmake                       |  17 +-
+ common/CudaLib/CMakeLists.txt              |   9 +-
+ common/CudaLib/mock/CMakeLists.txt         |   5 +-
+ common/CudaWorker/CMakeLists.txt           |   6 +-
+ cublas_proxy/CMakeLists.txt                |   6 +-
+ dcgmproftester/CMakeLists.txt              |   6 +-
+ modules/mndiag/CMakeLists.txt              | 242 +++++------
+ nvvs/plugin_src/CMakeLists.txt             |   2 +-
+ nvvs/plugin_src/nvbandwidth/CMakeLists.txt |  30 +-
+ 10 files changed, 329 insertions(+), 446 deletions(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index c8c2692..fd4aa49 100755
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -278,13 +278,13 @@ if (BUILD_TESTING)
+     add_library(testing_dcgm_cublas_stubs STATIC)
+ endif()
+ 
+-add_executable(BwChecker_11)
+-add_executable(BwChecker_12)
+-add_executable(BwChecker_13)
++foreach(CUDA_VER IN LISTS Cuda_SUPPORTED_VERSIONS)
++    add_executable(BwChecker_${CUDA_VER})
++endforeach()
+ add_executable(dcgmi)
+-add_executable(dcgmproftester11)
+-add_executable(dcgmproftester12)
+-add_executable(dcgmproftester13)
++foreach(CUDA_VER IN LISTS Cuda_SUPPORTED_VERSIONS)
++    add_executable(dcgmproftester${CUDA_VER})
++endforeach()
+ add_executable(nv-hostengine)
+ add_executable(nvvs)
+ add_executable(stub_library_test)
+@@ -339,12 +339,12 @@ add_library(buildinfo_objects STATIC)
+ add_library(childprocess STATIC)
+ add_library(common_watch_objects STATIC)
+ add_library(dcgm_common STATIC)
+-add_library(dcgm_cuda_worker11 STATIC)
+-add_library(dcgm_cuda_worker12 STATIC)
+-add_library(dcgm_cuda_worker13 STATIC)
+-add_library(dcgm_cuda_lib11 STATIC)
+-add_library(dcgm_cuda_lib12 STATIC)
+-add_library(dcgm_cuda_lib13 STATIC)
++foreach(CUDA_VER IN LISTS Cuda_SUPPORTED_VERSIONS)
++    add_library(dcgm_cuda_worker${CUDA_VER} STATIC)
++endforeach()
++foreach(CUDA_VER IN LISTS Cuda_SUPPORTED_VERSIONS)
++    add_library(dcgm_cuda_lib${CUDA_VER} STATIC)
++endforeach()
+ add_library(dcgm_entity_types STATIC)
+ add_library(dcgm_logging STATIC)
+ add_library(dcgm_mutex STATIC)
+@@ -356,9 +356,9 @@ add_library(dcgmi_objects_without_main STATIC)
+ add_library(nvvs_without_main_objects OBJECT)
+ add_library(nvvs_main_objects OBJECT)
+ add_library(nvvs_plugins_common_objects OBJECT)
+-add_library(pluginCudaCommon_11 STATIC)
+-add_library(pluginCudaCommon_12 STATIC)
+-add_library(pluginCudaCommon_13 STATIC)
++foreach(CUDA_VER IN LISTS Cuda_SUPPORTED_VERSIONS)
++    add_library(pluginCudaCommon_${CUDA_VER} STATIC)
++endforeach()
+ add_library(remoteconn STATIC)
+ add_library(sdk_nvml_essentials_objects STATIC)
+ add_library(sdk_nvml_loader STATIC)
+@@ -383,34 +383,23 @@ add_library(dcgmmodulenvswitch SHARED)
+ add_library(dcgmmodulepolicy SHARED)
+ add_library(dcgmmodulesysmon SHARED)
+ 
+-add_library(ContextCreate_11 SHARED)
+-add_library(ContextCreate_12 SHARED)
+-add_library(ContextCreate_13 SHARED)
+-add_library(Diagnostic_11 SHARED)
+-add_library(Diagnostic_12 SHARED)
+-add_library(Diagnostic_13 SHARED)
+-add_library(Memory_11 SHARED)
+-add_library(Memory_12 SHARED)
+-add_library(Memory_13 SHARED)
+-add_library(Memtest_11 SHARED)
+-add_library(Memtest_12 SHARED)
+-add_library(Memtest_13 SHARED)
+-add_library(NVBandwidth_12 SHARED)
+-add_library(NVBandwidth_13 SHARED)
+-add_library(Pcie_11 SHARED)
+-add_library(Pcie_12 SHARED)
+-add_library(Pcie_13 SHARED)
+-add_library(TargetedPower_11 SHARED)
+-add_library(TargetedPower_12 SHARED)
+-add_library(TargetedPower_13 SHARED)
+-add_library(TargetedStress_11 SHARED)
+-add_library(TargetedStress_12 SHARED)
+-add_library(TargetedStress_13 SHARED)
++foreach(CUDA_VER IN LISTS Cuda_SUPPORTED_VERSIONS)
++    add_library(ContextCreate_${CUDA_VER} SHARED)
++    add_library(Diagnostic_${CUDA_VER} SHARED)
++    add_library(Memory_${CUDA_VER} SHARED)
++    add_library(Memtest_${CUDA_VER} SHARED)
++    add_library(Pcie_${CUDA_VER} SHARED)
++    add_library(TargetedPower_${CUDA_VER} SHARED)
++    add_library(TargetedStress_${CUDA_VER} SHARED)
++    if(CUDA_VER GREATER_EQUAL 12)
++        add_library(NVBandwidth_${CUDA_VER} SHARED)
++    endif()
++endforeach()
+ 
+ add_library(dcgm SHARED)
+-add_library(dcgm_cublas_proxy11 SHARED)
+-add_library(dcgm_cublas_proxy12 SHARED)
+-add_library(dcgm_cublas_proxy13 SHARED)
++foreach(CUDA_VER IN LISTS Cuda_SUPPORTED_VERSIONS)
++    add_library(dcgm_cublas_proxy${CUDA_VER} SHARED)
++endforeach()
+ add_library(pluginCommon SHARED)
+ 
+ add_library(sdk_nscq_loader)
+@@ -418,30 +407,7 @@ add_library(sdk_nvsdm_loader)
+ 
+ add_library(DCGM::dcgm ALIAS dcgm)
+ 
+-set_target_properties(
+-    ContextCreate_11
+-    ContextCreate_12
+-    ContextCreate_13
+-    Diagnostic_11
+-    Diagnostic_12
+-    Diagnostic_13
+-    Memory_11
+-    Memory_12
+-    Memory_13
+-    Memtest_11
+-    Memtest_12
+-    Memtest_13
+-    NVBandwidth_12
+-    NVBandwidth_13
+-    Pcie_11
+-    Pcie_12
+-    Pcie_13
+-    TargetedPower_11
+-    TargetedPower_12
+-    TargetedPower_13
+-    TargetedStress_11
+-    TargetedStress_12
+-    TargetedStress_13
++set(_SOVERSION_TARGETS
+     dcgm
+     dcgmmoduleconfig
+     dcgmmodulediag
+@@ -451,10 +417,24 @@ set_target_properties(
+     dcgmmodulenvswitch
+     dcgmmodulepolicy
+     dcgmmodulesysmon
+-    dcgm_cublas_proxy11
+-    dcgm_cublas_proxy12
+-    dcgm_cublas_proxy13
+-    pluginCommon
++    pluginCommon)
++
++foreach(CUDA_VER IN LISTS Cuda_SUPPORTED_VERSIONS)
++    list(APPEND _SOVERSION_TARGETS
++        ContextCreate_${CUDA_VER}
++        Diagnostic_${CUDA_VER}
++        Memory_${CUDA_VER}
++        Memtest_${CUDA_VER}
++        Pcie_${CUDA_VER}
++        TargetedPower_${CUDA_VER}
++        TargetedStress_${CUDA_VER}
++        dcgm_cublas_proxy${CUDA_VER})
++    if(CUDA_VER GREATER_EQUAL 12)
++        list(APPEND _SOVERSION_TARGETS NVBandwidth_${CUDA_VER})
++    endif()
++endforeach()
++
++set_target_properties(${_SOVERSION_TARGETS}
+     PROPERTIES
+         SOVERSION ${PROJECT_VERSION_MAJOR}
+         VERSION ${PROJECT_VERSION})
+@@ -465,47 +445,40 @@ set_target_properties(nvvs PROPERTIES
+     INSTALL_RPATH "${DCGM_RPATH}:$ORIGIN/../../lib:$ORIGIN/../${DCGM_TESTS_ARCH}"
+     RUNTIME_OUTPUT_DIRECTORY nvvs)
+ 
+-set_target_properties(
+-    BwChecker_11
+-    BwChecker_12
+-    BwChecker_13
++set(_BWCHECKER_TARGETS)
++foreach(CUDA_VER IN LISTS Cuda_SUPPORTED_VERSIONS)
++    list(APPEND _BWCHECKER_TARGETS BwChecker_${CUDA_VER})
++endforeach()
++
++set_target_properties(${_BWCHECKER_TARGETS}
+     PROPERTIES
+-        INSTALL_RPATH "${DCGM_RPATH}:$ORIGIN/../../../${DCGM_TESTS_ARCH}")
++        INSTALL_RPATH "${DCGM_RPATH}:\$ORIGIN/../../../${DCGM_TESTS_ARCH}")
+ 
+ set_target_properties(dcgmi PROPERTIES RUNTIME_OUTPUT_DIRECTORY dcgmi)
+ 
+-set_target_properties(
+-    ContextCreate_11
+-    ContextCreate_12
+-    ContextCreate_13
+-    Diagnostic_11
+-    Diagnostic_12
+-    Diagnostic_13
+-    Memory_11
+-    Memory_12
+-    Memory_13
+-    Memtest_11
+-    Memtest_12
+-    Memtest_13
+-    NVBandwidth_12
+-    NVBandwidth_13
+-    Pcie_11
+-    Pcie_12
+-    Pcie_13
+-    TargetedPower_11
+-    TargetedPower_12
+-    TargetedPower_13
+-    TargetedStress_11
+-    TargetedStress_12
+-    TargetedStress_13
++set(_VISIBILITY_TARGETS
+     nvml_injection
+     nvmli_public
+     nvvs_without_main_objects
+     nvvs_plugins_common_objects
+-    pluginCommon
+-    pluginCudaCommon_11
+-    pluginCudaCommon_12
+-    pluginCudaCommon_13
++    pluginCommon)
++
++foreach(CUDA_VER IN LISTS Cuda_SUPPORTED_VERSIONS)
++    list(APPEND _VISIBILITY_TARGETS
++        ContextCreate_${CUDA_VER}
++        Diagnostic_${CUDA_VER}
++        Memory_${CUDA_VER}
++        Memtest_${CUDA_VER}
++        Pcie_${CUDA_VER}
++        TargetedPower_${CUDA_VER}
++        TargetedStress_${CUDA_VER}
++        pluginCudaCommon_${CUDA_VER})
++    if(CUDA_VER GREATER_EQUAL 12)
++        list(APPEND _VISIBILITY_TARGETS NVBandwidth_${CUDA_VER})
++    endif()
++endforeach()
++
++set_target_properties(${_VISIBILITY_TARGETS}
+     PROPERTIES
+         C_VISIBILITY_PRESET default
+         CXX_VISIBILITY_PRESET default
+@@ -635,17 +608,19 @@ install(
+         DESTINATION "${CMAKE_INSTALL_LIBEXECDIR}/${PROJECT_NAME}"
+         COMPONENT Core)
+ 
+-install(
+-    TARGETS
+-        dcgm_cublas_proxy11
+-        dcgmproftester11
+-    LIBRARY
+-        DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+-        COMPONENT Cuda11
+-        NAMELINK_SKIP
+-    RUNTIME
+-        DESTINATION "${CMAKE_INSTALL_BINDIR}"
+-        COMPONENT Cuda11)
++foreach(CUDA_VER IN LISTS Cuda_SUPPORTED_VERSIONS)
++    install(
++        TARGETS
++            dcgm_cublas_proxy${CUDA_VER}
++            dcgmproftester${CUDA_VER}
++        LIBRARY
++            DESTINATION "${CMAKE_INSTALL_LIBDIR}"
++            COMPONENT Cuda${CUDA_VER}
++            NAMELINK_SKIP
++        RUNTIME
++            DESTINATION "${CMAKE_INSTALL_BINDIR}"
++            COMPONENT Cuda${CUDA_VER})
++endforeach()
+ 
+ install(
+     TARGETS pluginCommon
+@@ -661,97 +636,36 @@ install(
+         DESTINATION "${CMAKE_INSTALL_LIBEXECDIR}/${PROJECT_NAME}/plugins/cudaless"
+         COMPONENT Core)
+ 
+-install(
+-    TARGETS
+-        BwChecker_11
+-        ContextCreate_11
+-        Diagnostic_11
+-        Memory_11
+-        Memtest_11
+-        Pcie_11
+-        TargetedPower_11
+-        TargetedStress_11
+-    LIBRARY
+-        DESTINATION "${CMAKE_INSTALL_LIBEXECDIR}/${PROJECT_NAME}/plugins/cuda11"
+-        PERMISSIONS
+-            OWNER_READ OWNER_WRITE OWNER_EXECUTE
+-            GROUP_READ GROUP_EXECUTE
+-            WORLD_READ WORLD_EXECUTE
+-        COMPONENT Cuda11
+-        NAMELINK_SKIP
+-    RUNTIME
+-        DESTINATION "${CMAKE_INSTALL_LIBEXECDIR}/${PROJECT_NAME}/plugins/cuda11"
+-        COMPONENT Cuda11)
++foreach(CUDA_VER IN LISTS Cuda_SUPPORTED_VERSIONS)
++    set(_PLUGIN_TARGETS_${CUDA_VER}
++        BwChecker_${CUDA_VER}
++        ContextCreate_${CUDA_VER}
++        Diagnostic_${CUDA_VER}
++        Memory_${CUDA_VER}
++        Memtest_${CUDA_VER}
++        Pcie_${CUDA_VER}
++        TargetedPower_${CUDA_VER}
++        TargetedStress_${CUDA_VER})
++    if(CUDA_VER GREATER_EQUAL 12)
++        list(APPEND _PLUGIN_TARGETS_${CUDA_VER} NVBandwidth_${CUDA_VER})
++    endif()
++    install(
++        TARGETS ${_PLUGIN_TARGETS_${CUDA_VER}}
++        LIBRARY
++            DESTINATION "${CMAKE_INSTALL_LIBEXECDIR}/${PROJECT_NAME}/plugins/cuda${CUDA_VER}"
++            PERMISSIONS
++                OWNER_READ OWNER_WRITE OWNER_EXECUTE
++                GROUP_READ GROUP_EXECUTE
++                WORLD_READ WORLD_EXECUTE
++            COMPONENT Cuda${CUDA_VER}
++            NAMELINK_SKIP
++        RUNTIME
++            DESTINATION "${CMAKE_INSTALL_LIBEXECDIR}/${PROJECT_NAME}/plugins/cuda${CUDA_VER}"
++            COMPONENT Cuda${CUDA_VER})
++endforeach()
+ 
+-install(
+-    TARGETS
+-        dcgm_cublas_proxy12
+-        dcgmproftester12
+-    LIBRARY
+-        DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+-        COMPONENT Cuda12
+-        NAMELINK_SKIP
+-    RUNTIME
+-        DESTINATION "${CMAKE_INSTALL_BINDIR}"
+-        COMPONENT Cuda12)
+-
+-install(
+-    TARGETS
+-        dcgm_cublas_proxy13
+-        dcgmproftester13
+-    LIBRARY
+-        DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+-        COMPONENT Cuda13
+-        NAMELINK_SKIP
+-    RUNTIME
+-        DESTINATION "${CMAKE_INSTALL_BINDIR}"
+-        COMPONENT Cuda13)
+-
+-install(
+-    TARGETS
+-        BwChecker_12
+-        ContextCreate_12
+-        Diagnostic_12
+-        Memory_12
+-        Memtest_12
+-        NVBandwidth_12
+-        Pcie_12
+-        TargetedPower_12
+-        TargetedStress_12
+-    LIBRARY
+-        DESTINATION "${CMAKE_INSTALL_LIBEXECDIR}/${PROJECT_NAME}/plugins/cuda12"
+-        PERMISSIONS
+-            OWNER_READ OWNER_WRITE OWNER_EXECUTE
+-            GROUP_READ GROUP_EXECUTE
+-            WORLD_READ WORLD_EXECUTE
+-        COMPONENT Cuda12
+-        NAMELINK_SKIP
+-    RUNTIME
+-        DESTINATION "${CMAKE_INSTALL_LIBEXECDIR}/${PROJECT_NAME}/plugins/cuda12"
+-        COMPONENT Cuda12)
+  
+- install(
+-    TARGETS
+-        BwChecker_13
+-        ContextCreate_13
+-        Diagnostic_13
+-        Memory_13
+-        Memtest_13
+-        NVBandwidth_13
+-        Pcie_13
+-        TargetedPower_13
+-        TargetedStress_13
+-    LIBRARY
+-        DESTINATION "${CMAKE_INSTALL_LIBEXECDIR}/${PROJECT_NAME}/plugins/cuda13"
+-        PERMISSIONS
+-            OWNER_READ OWNER_WRITE OWNER_EXECUTE
+-            GROUP_READ GROUP_EXECUTE
+-            WORLD_READ WORLD_EXECUTE
+-        COMPONENT Cuda13
+-        NAMELINK_SKIP
+-    RUNTIME
+-        DESTINATION "${CMAKE_INSTALL_LIBEXECDIR}/${PROJECT_NAME}/plugins/cuda13"
+-        COMPONENT Cuda13)       
++       
+ 
+ # Tests component
+ install(
+@@ -760,26 +674,28 @@ install(
+         DESTINATION "${CMAKE_INSTALL_DATADIR}/dcgm_tests/apps/nvvs/"
+         COMPONENT Tests)
+ 
++set(_TESTS_MAIN_TARGETS
++    dcgm
++    dcgmi
++    dcgmmoduleconfig
++    dcgmmodulediag
++    dcgmmodulehealth
++    dcgmmoduleintrospect
++    dcgmmodulemndiag
++    dcgmmodulenvswitch
++    dcgmmodulepolicy
++    dcgmmodulesysmon
++    nv-hostengine
++    nvml_injection)
++
++foreach(CUDA_VER IN LISTS Cuda_SUPPORTED_VERSIONS)
++    list(APPEND _TESTS_MAIN_TARGETS
++        dcgm_cublas_proxy${CUDA_VER}
++        dcgmproftester${CUDA_VER})
++endforeach()
++
+ install(
+-    TARGETS
+-        dcgm
+-        dcgm_cublas_proxy11
+-        dcgm_cublas_proxy12
+-        dcgm_cublas_proxy13
+-        dcgmi
+-        dcgmmoduleconfig
+-        dcgmmodulediag
+-        dcgmmodulehealth
+-        dcgmmoduleintrospect
+-        dcgmmodulemndiag
+-        dcgmmodulenvswitch
+-        dcgmmodulepolicy
+-        dcgmmodulesysmon
+-        dcgmproftester11
+-        dcgmproftester12
+-        dcgmproftester13
+-        nv-hostengine
+-        nvml_injection
++    TARGETS ${_TESTS_MAIN_TARGETS}
+     LIBRARY
+         DESTINATION "${CMAKE_INSTALL_DATADIR}/dcgm_tests/apps/${DCGM_TESTS_ARCH}"
+         COMPONENT Tests
+@@ -802,73 +718,33 @@ install(
+         DESTINATION "${CMAKE_INSTALL_DATADIR}/dcgm_tests/apps/nvvs/plugins/cudaless"
+         COMPONENT Tests)
+ 
+-install(
+-    TARGETS
+-        BwChecker_11
+-        ContextCreate_11
+-        Diagnostic_11
+-        Memory_11
+-        Memtest_11
+-        Pcie_11
+-        TargetedPower_11
+-        TargetedStress_11
+-    LIBRARY
+-        DESTINATION "${CMAKE_INSTALL_DATADIR}/dcgm_tests/apps/nvvs/plugins/cuda11"
+-        PERMISSIONS
+-            OWNER_READ OWNER_WRITE OWNER_EXECUTE
+-            GROUP_READ GROUP_EXECUTE
+-            WORLD_READ WORLD_EXECUTE
+-        COMPONENT Tests
+-        NAMELINK_SKIP
+-    RUNTIME
+-        DESTINATION "${CMAKE_INSTALL_DATADIR}/dcgm_tests/apps/nvvs/plugins/cuda11"
+-        COMPONENT Tests)
+-
+-install(
+-    TARGETS
+-        BwChecker_12
+-        ContextCreate_12
+-        Diagnostic_12
+-        Memory_12
+-        Memtest_12
+-        NVBandwidth_12
+-        Pcie_12
+-        TargetedPower_12
+-        TargetedStress_12
+-    LIBRARY
+-        DESTINATION "${CMAKE_INSTALL_DATADIR}/dcgm_tests/apps/nvvs/plugins/cuda12"
+-        PERMISSIONS
+-            OWNER_READ OWNER_WRITE OWNER_EXECUTE
+-            GROUP_READ GROUP_EXECUTE
+-            WORLD_READ WORLD_EXECUTE
+-        COMPONENT Tests
+-        NAMELINK_SKIP
+-    RUNTIME
+-        DESTINATION "${CMAKE_INSTALL_DATADIR}/dcgm_tests/apps/nvvs/plugins/cuda12"
+-        COMPONENT Tests)
+-
+-install(
+-    TARGETS
+-        BwChecker_13
+-        ContextCreate_13
+-        Diagnostic_13
+-        Memory_13
+-        Memtest_13
+-        NVBandwidth_13
+-        Pcie_13
+-        TargetedPower_13
+-        TargetedStress_13
+-    LIBRARY
+-        DESTINATION "${CMAKE_INSTALL_DATADIR}/dcgm_tests/apps/nvvs/plugins/cuda13"
+-        PERMISSIONS
+-            OWNER_READ OWNER_WRITE OWNER_EXECUTE
+-            GROUP_READ GROUP_EXECUTE
+-            WORLD_READ WORLD_EXECUTE
+-        COMPONENT Tests
+-        NAMELINK_SKIP
+-    RUNTIME
+-        DESTINATION "${CMAKE_INSTALL_DATADIR}/dcgm_tests/apps/nvvs/plugins/cuda13"
+-        COMPONENT Tests)
++foreach(CUDA_VER IN LISTS Cuda_SUPPORTED_VERSIONS)
++    set(_TESTS_PLUGIN_TARGETS_${CUDA_VER}
++        BwChecker_${CUDA_VER}
++        ContextCreate_${CUDA_VER}
++        Diagnostic_${CUDA_VER}
++        Memory_${CUDA_VER}
++        Memtest_${CUDA_VER}
++        Pcie_${CUDA_VER}
++        TargetedPower_${CUDA_VER}
++        TargetedStress_${CUDA_VER})
++    if(CUDA_VER GREATER_EQUAL 12)
++        list(APPEND _TESTS_PLUGIN_TARGETS_${CUDA_VER} NVBandwidth_${CUDA_VER})
++    endif()
++    install(
++        TARGETS ${_TESTS_PLUGIN_TARGETS_${CUDA_VER}}
++        LIBRARY
++            DESTINATION "${CMAKE_INSTALL_DATADIR}/dcgm_tests/apps/nvvs/plugins/cuda${CUDA_VER}"
++            PERMISSIONS
++                OWNER_READ OWNER_WRITE OWNER_EXECUTE
++                GROUP_READ GROUP_EXECUTE
++                WORLD_READ WORLD_EXECUTE
++            COMPONENT Tests
++            NAMELINK_SKIP
++        RUNTIME
++            DESTINATION "${CMAKE_INSTALL_DATADIR}/dcgm_tests/apps/nvvs/plugins/cuda${CUDA_VER}"
++            COMPONENT Tests)
++endforeach()
+ 
+ if (CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64")
+     set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE "amd64")
+diff --git a/cmake/FindCuda.cmake b/cmake/FindCuda.cmake
+index 8ac1b31..8b397b4 100644
+--- a/cmake/FindCuda.cmake
++++ b/cmake/FindCuda.cmake
+@@ -55,12 +55,6 @@ foreach(_Cuda_VERSION IN LISTS _Cuda_VERSIONS)
+ 
+     string(REGEX MATCH "^[^.]+" _Cuda_MAJOR_VERSION "${_Cuda_VERSION}")
+ 
+-    list(APPEND _Cuda_REQUIRED_VARS
+-        "CUDA${_Cuda_MAJOR_VERSION}_INCLUDE_DIR"
+-        "CUDA${_Cuda_MAJOR_VERSION}_STATIC_LIBS"
+-        "CUDA${_Cuda_MAJOR_VERSION}_LIBS"
+-        "CUDA${_Cuda_MAJOR_VERSION}_STATIC_CUBLAS_LIBS")
+-
+     list(TRANSFORM _Cuda_PATHS
+         APPEND "/cuda-${_Cuda_VERSION}/${_Cuda_TARGET_DIR}/include"
+         OUTPUT_VARIABLE _Cuda_INSTALL_ROOT_CANDIDATES)
+@@ -150,6 +144,14 @@ foreach(_Cuda_VERSION IN LISTS _Cuda_VERSIONS)
+     set(CUDA${_Cuda_MAJOR_VERSION}_STATIC_CUBLAS_LIBS
+         "${Cuda_${_Cuda_MAJOR_VERSION}_cublas_LIBRARY}"
+         "${Cuda_${_Cuda_MAJOR_VERSION}_cublasLt_LIBRARY}")
++
++    list(APPEND _Cuda_REQUIRED_VARS
++        "CUDA${_Cuda_MAJOR_VERSION}_INCLUDE_DIR"
++        "CUDA${_Cuda_MAJOR_VERSION}_STATIC_LIBS"
++        "CUDA${_Cuda_MAJOR_VERSION}_LIBS"
++        "CUDA${_Cuda_MAJOR_VERSION}_STATIC_CUBLAS_LIBS")
++
++    list(APPEND Cuda_SUPPORTED_VERSIONS ${_Cuda_MAJOR_VERSION})
+ endforeach()
+ 
+ unset(_Cuda_LIBRARY)
+@@ -158,7 +160,8 @@ unset(_Cuda_VERSION)
+ unset(_Cuda_VERSIONS)
+ 
+ include(FindPackageHandleStandardArgs)
+-find_package_handle_standard_args(Cuda REQUIRED_VARS ${_Cuda_REQUIRED_VARS})
++find_package_handle_standard_args(Cuda
++    REQUIRED_VARS Cuda_SUPPORTED_VERSIONS ${_Cuda_REQUIRED_VARS})
+ 
+ if (NOT Cuda_FOUND)
+     foreach(_Cuda_REQUIRED_VAR IN LISTS _Cuda_REQUIRED_VARS)
+diff --git a/common/CudaLib/CMakeLists.txt b/common/CudaLib/CMakeLists.txt
+index 399b407..e137a6b 100644
+--- a/common/CudaLib/CMakeLists.txt
++++ b/common/CudaLib/CMakeLists.txt
+@@ -40,12 +40,13 @@ macro(define_dcgm_cuda_lib cuda_version)
+         CudaLib.h)
+ endmacro()
+ 
+-define_dcgm_cuda_lib(11)
+-define_dcgm_cuda_lib(12)
+-define_dcgm_cuda_lib(13)
++foreach(cuda_version IN LISTS Cuda_SUPPORTED_VERSIONS)
++    define_dcgm_cuda_lib(${cuda_version})
++endforeach()
+ 
++list(GET Cuda_SUPPORTED_VERSIONS 0 _cuda_lib_base_ver)
+ target_include_directories(cuda_lib_base_interface INTERFACE
+-    "${CUDA12_INCLUDE_DIR}")
++    "${CUDA${_cuda_lib_base_ver}_INCLUDE_DIR}")
+ target_include_directories(cuda_lib_base_interface INTERFACE
+     "${CMAKE_CURRENT_SOURCE_DIR}")
+ 
+diff --git a/common/CudaLib/mock/CMakeLists.txt b/common/CudaLib/mock/CMakeLists.txt
+index 87522c4..07c283e 100644
+--- a/common/CudaLib/mock/CMakeLists.txt
++++ b/common/CudaLib/mock/CMakeLists.txt
+@@ -13,11 +13,12 @@
+ # limitations under the License.
+ 
+ add_subdirectory(tests)
++list(GET Cuda_SUPPORTED_VERSIONS 0 _cuda_mock_ver)
+ target_compile_definitions(cuda_mock_interface INTERFACE
+-    CUDA_VERSION_USED=12)
++    CUDA_VERSION_USED=${_cuda_mock_ver})
+ 
+ target_include_directories(cuda_mock_interface INTERFACE
+-    "${CUDA12_INCLUDE_DIR}")
++    "${CUDA${_cuda_mock_ver}_INCLUDE_DIR}")
+ target_include_directories(cuda_mock_interface INTERFACE
+     "${CMAKE_CURRENT_SOURCE_DIR}")
+ 
+diff --git a/common/CudaWorker/CMakeLists.txt b/common/CudaWorker/CMakeLists.txt
+index 406f5a9..2b82c99 100644
+--- a/common/CudaWorker/CMakeLists.txt
++++ b/common/CudaWorker/CMakeLists.txt
+@@ -35,6 +35,6 @@ macro(define_dcgm_cuda_worker cuda_version)
+         DcgmDgemm.cpp)
+ endmacro()
+ 
+-define_dcgm_cuda_worker(11)
+-define_dcgm_cuda_worker(12)
+-define_dcgm_cuda_worker(13)
++foreach(cuda_version IN LISTS Cuda_SUPPORTED_VERSIONS)
++    define_dcgm_cuda_worker(${cuda_version})
++endforeach()
+diff --git a/cublas_proxy/CMakeLists.txt b/cublas_proxy/CMakeLists.txt
+index 7a79b12..6c19474 100755
+--- a/cublas_proxy/CMakeLists.txt
++++ b/cublas_proxy/CMakeLists.txt
+@@ -38,6 +38,6 @@ macro(define_proxy_lib CUDA_VER)
+         rt)
+ endmacro()
+ 
+-add_subdirectory(Cuda11)
+-add_subdirectory(Cuda12)
+-add_subdirectory(Cuda13)
++foreach(CUDA_VER IN LISTS Cuda_SUPPORTED_VERSIONS)
++    add_subdirectory(Cuda${CUDA_VER})
++endforeach()
+diff --git a/dcgmproftester/CMakeLists.txt b/dcgmproftester/CMakeLists.txt
+index fc95413..18baed8 100755
+--- a/dcgmproftester/CMakeLists.txt
++++ b/dcgmproftester/CMakeLists.txt
+@@ -64,9 +64,9 @@ macro(define_dcgmproftester cuda_version)
+             ${COMMON_SRCS})
+ endmacro()
+ 
+-define_dcgmproftester(11)
+-define_dcgmproftester(12)
+-define_dcgmproftester(13)
++foreach(cuda_version IN LISTS Cuda_SUPPORTED_VERSIONS)
++    define_dcgmproftester(${cuda_version})
++endforeach()
+ 
+ install(
+     FILES DcgmProfTesterKernels.ptx
+diff --git a/modules/mndiag/CMakeLists.txt b/modules/mndiag/CMakeLists.txt
+index 668ef8d..64261e2 100755
+--- a/modules/mndiag/CMakeLists.txt
++++ b/modules/mndiag/CMakeLists.txt
+@@ -93,144 +93,154 @@ target_sources(dcgmmodulemndiag
+     PRIVATE
+         ${SRCS})
+ 
+-install(
+-    FILES cuda12/${CMAKE_SYSTEM_PROCESSOR}/libcurand.so.10.3.10.19
+-    DESTINATION "${CMAKE_INSTALL_LIBEXECDIR}/${PROJECT_NAME}/plugins/cuda12/"
+-    COMPONENT Cuda12)
++if(12 IN_LIST Cuda_SUPPORTED_VERSIONS)
++    install(
++        FILES cuda12/${CMAKE_SYSTEM_PROCESSOR}/libcurand.so.10.3.10.19
++        DESTINATION "${CMAKE_INSTALL_LIBEXECDIR}/${PROJECT_NAME}/plugins/cuda12/"
++        COMPONENT Cuda12)
+ 
+-install(CODE "
+-    execute_process(
+-        COMMAND \"${CMAKE_COMMAND}\" -E create_symlink libcurand.so.10.3.10.19 libcurand.so.10
+-        WORKING_DIRECTORY \"\$ENV{DESTDIR}$<INSTALL_PREFIX>/${DCGM_NVVS_PLUGINS_INSTALL_DIR}/cuda12\"
+-        COMMAND_ERROR_IS_FATAL ANY)
++    install(CODE "
++        execute_process(
++            COMMAND \"${CMAKE_COMMAND}\" -E create_symlink libcurand.so.10.3.10.19 libcurand.so.10
++            WORKING_DIRECTORY \"\$ENV{DESTDIR}$<INSTALL_PREFIX>/${DCGM_NVVS_PLUGINS_INSTALL_DIR}/cuda12\"
++            COMMAND_ERROR_IS_FATAL ANY)
+ 
+-    execute_process(
+-        COMMAND \"${CMAKE_COMMAND}\" -E create_symlink libcurand.so.10 libcurand.so
+-        WORKING_DIRECTORY \"\$ENV{DESTDIR}$<INSTALL_PREFIX>/${DCGM_NVVS_PLUGINS_INSTALL_DIR}/cuda12\"
+-        COMMAND_ERROR_IS_FATAL ANY)
++        execute_process(
++            COMMAND \"${CMAKE_COMMAND}\" -E create_symlink libcurand.so.10 libcurand.so
++            WORKING_DIRECTORY \"\$ENV{DESTDIR}$<INSTALL_PREFIX>/${DCGM_NVVS_PLUGINS_INSTALL_DIR}/cuda12\"
++            COMMAND_ERROR_IS_FATAL ANY)
+ 
+-    execute_process(
+-        COMMAND \"${CMAKE_COMMAND}\" -E make_directory updated
+-        WORKING_DIRECTORY \"\$ENV{DESTDIR}$<INSTALL_PREFIX>/${DCGM_NVVS_PLUGINS_INSTALL_DIR}/cuda12\"
+-        COMMAND_ERROR_IS_FATAL ANY)
++        execute_process(
++            COMMAND \"${CMAKE_COMMAND}\" -E make_directory updated
++            WORKING_DIRECTORY \"\$ENV{DESTDIR}$<INSTALL_PREFIX>/${DCGM_NVVS_PLUGINS_INSTALL_DIR}/cuda12\"
++            COMMAND_ERROR_IS_FATAL ANY)
+  
+-    execute_process(
+-        COMMAND \"${CMAKE_COMMAND}\" -E create_symlink ../libcurand.so.10.3.10.19 libcurand.so.10
+-        WORKING_DIRECTORY \"\$ENV{DESTDIR}$<INSTALL_PREFIX>/${DCGM_NVVS_PLUGINS_INSTALL_DIR}/cuda12/updated\"
+-        COMMAND_ERROR_IS_FATAL ANY)"
+-    COMPONENT Cuda12)
++        execute_process(
++            COMMAND \"${CMAKE_COMMAND}\" -E create_symlink ../libcurand.so.10.3.10.19 libcurand.so.10
++            WORKING_DIRECTORY \"\$ENV{DESTDIR}$<INSTALL_PREFIX>/${DCGM_NVVS_PLUGINS_INSTALL_DIR}/cuda12/updated\"
++            COMMAND_ERROR_IS_FATAL ANY)"
++        COMPONENT Cuda12)
+ 
+-install(
+-    PROGRAMS cuda12/${CMAKE_SYSTEM_PROCESSOR}/mnubergemm
+-    DESTINATION "${CMAKE_INSTALL_LIBEXECDIR}/${PROJECT_NAME}/plugins/cuda12/"
+-    COMPONENT Multinode_Cuda12)
++    install(
++        PROGRAMS cuda12/${CMAKE_SYSTEM_PROCESSOR}/mnubergemm
++        DESTINATION "${CMAKE_INSTALL_LIBEXECDIR}/${PROJECT_NAME}/plugins/cuda12/"
++        COMPONENT Multinode_Cuda12)
+ 
+-install(CODE "
+-    file(RPATH_CHANGE
+-        FILE \"\$ENV{DESTDIR}$<INSTALL_PREFIX>/${CMAKE_INSTALL_LIBEXECDIR}/datacenter-gpu-manager-4/plugins/cuda12/mnubergemm\"
+-        OLD_RPATH \"::::::::::::::::::::::::::::::::::::::::::::::::::::\"
+-        NEW_RPATH \"$ORIGIN:$ORIGIN/../../../../${CMAKE_INSTALL_LIBDIR}\")"
+-    COMPONENT Multinode_Cuda12)
++    install(CODE "
++        file(RPATH_CHANGE
++            FILE \"\$ENV{DESTDIR}$<INSTALL_PREFIX>/${CMAKE_INSTALL_LIBEXECDIR}/datacenter-gpu-manager-4/plugins/cuda12/mnubergemm\"
++            OLD_RPATH \"::::::::::::::::::::::::::::::::::::::::::::::::::::\"
++            NEW_RPATH \"$ORIGIN:$ORIGIN/../../../../${CMAKE_INSTALL_LIBDIR}\")"
++        COMPONENT Multinode_Cuda12)
++endif()
+ 
+-install(
+-    FILES cuda13/${CMAKE_SYSTEM_PROCESSOR}/libcurand.so.10.4.0.35
+-    DESTINATION "${CMAKE_INSTALL_LIBEXECDIR}/${PROJECT_NAME}/plugins/cuda13/"
+-    COMPONENT Cuda13)
++if(13 IN_LIST Cuda_SUPPORTED_VERSIONS)
++    install(
++        FILES cuda13/${CMAKE_SYSTEM_PROCESSOR}/libcurand.so.10.4.0.35
++        DESTINATION "${CMAKE_INSTALL_LIBEXECDIR}/${PROJECT_NAME}/plugins/cuda13/"
++        COMPONENT Cuda13)
+ 
+-install(CODE "
+-    execute_process(
+-        COMMAND \"${CMAKE_COMMAND}\" -E create_symlink libcurand.so.10.4.0.35 libcurand.so.10
+-        WORKING_DIRECTORY \"\$ENV{DESTDIR}$<INSTALL_PREFIX>/${DCGM_NVVS_PLUGINS_INSTALL_DIR}/cuda13\"
+-        COMMAND_ERROR_IS_FATAL ANY)
++    install(CODE "
++        execute_process(
++            COMMAND \"${CMAKE_COMMAND}\" -E create_symlink libcurand.so.10.4.0.35 libcurand.so.10
++            WORKING_DIRECTORY \"\$ENV{DESTDIR}$<INSTALL_PREFIX>/${DCGM_NVVS_PLUGINS_INSTALL_DIR}/cuda13\"
++            COMMAND_ERROR_IS_FATAL ANY)
+ 
+-    execute_process(
+-        COMMAND \"${CMAKE_COMMAND}\" -E create_symlink libcurand.so.10 libcurand.so
+-        WORKING_DIRECTORY \"\$ENV{DESTDIR}$<INSTALL_PREFIX>/${DCGM_NVVS_PLUGINS_INSTALL_DIR}/cuda13\"
+-        COMMAND_ERROR_IS_FATAL ANY)
++        execute_process(
++            COMMAND \"${CMAKE_COMMAND}\" -E create_symlink libcurand.so.10 libcurand.so
++            WORKING_DIRECTORY \"\$ENV{DESTDIR}$<INSTALL_PREFIX>/${DCGM_NVVS_PLUGINS_INSTALL_DIR}/cuda13\"
++            COMMAND_ERROR_IS_FATAL ANY)
+ 
+-    execute_process(
+-        COMMAND \"${CMAKE_COMMAND}\" -E make_directory updated
+-        WORKING_DIRECTORY \"\$ENV{DESTDIR}$<INSTALL_PREFIX>/${DCGM_NVVS_PLUGINS_INSTALL_DIR}/cuda13\"
+-        COMMAND_ERROR_IS_FATAL ANY)
++        execute_process(
++            COMMAND \"${CMAKE_COMMAND}\" -E make_directory updated
++            WORKING_DIRECTORY \"\$ENV{DESTDIR}$<INSTALL_PREFIX>/${DCGM_NVVS_PLUGINS_INSTALL_DIR}/cuda13\"
++            COMMAND_ERROR_IS_FATAL ANY)
+ 
+-    execute_process(
+-        COMMAND \"${CMAKE_COMMAND}\" -E create_symlink ../libcurand.so.10.4.0.35 libcurand.so.10
+-        WORKING_DIRECTORY \"\$ENV{DESTDIR}$<INSTALL_PREFIX>/${DCGM_NVVS_PLUGINS_INSTALL_DIR}/cuda13/updated\"
+-        COMMAND_ERROR_IS_FATAL ANY)"
+-    COMPONENT Cuda13)
++        execute_process(
++            COMMAND \"${CMAKE_COMMAND}\" -E create_symlink ../libcurand.so.10.4.0.35 libcurand.so.10
++            WORKING_DIRECTORY \"\$ENV{DESTDIR}$<INSTALL_PREFIX>/${DCGM_NVVS_PLUGINS_INSTALL_DIR}/cuda13/updated\"
++            COMMAND_ERROR_IS_FATAL ANY)"
++        COMPONENT Cuda13)
+ 
+-install(
+-    PROGRAMS cuda13/${CMAKE_SYSTEM_PROCESSOR}/mnubergemm
+-    DESTINATION "${CMAKE_INSTALL_LIBEXECDIR}/${PROJECT_NAME}/plugins/cuda13"
+-    COMPONENT Multinode_Cuda13)
++    install(
++        PROGRAMS cuda13/${CMAKE_SYSTEM_PROCESSOR}/mnubergemm
++        DESTINATION "${CMAKE_INSTALL_LIBEXECDIR}/${PROJECT_NAME}/plugins/cuda13"
++        COMPONENT Multinode_Cuda13)
+ 
+-install(CODE "
+-    file(RPATH_CHANGE
+-        FILE \"\$ENV{DESTDIR}$<INSTALL_PREFIX>/libexec/datacenter-gpu-manager-4/plugins/cuda13/mnubergemm\"
+-        OLD_RPATH \"::::::::::::::::::::::::::::::::::::::::::::::::::::\"
+-        NEW_RPATH \"$ORIGIN:$ORIGIN/../../../../${CMAKE_INSTALL_LIBDIR}\")"
+-    COMPONENT Multinode_Cuda13)
++    install(CODE "
++        file(RPATH_CHANGE
++            FILE \"\$ENV{DESTDIR}$<INSTALL_PREFIX>/libexec/datacenter-gpu-manager-4/plugins/cuda13/mnubergemm\"
++            OLD_RPATH \"::::::::::::::::::::::::::::::::::::::::::::::::::::\"
++            NEW_RPATH \"$ORIGIN:$ORIGIN/../../../../${CMAKE_INSTALL_LIBDIR}\")"
++        COMPONENT Multinode_Cuda13)
++endif()
+ 
+-install(
+-    PROGRAMS cuda12/${CMAKE_SYSTEM_PROCESSOR}/mnubergemm
+-    DESTINATION ${DCGM_TESTS_INSTALL_DIR}/apps/nvvs/plugins/cuda12
+-    COMPONENT Tests)
++if(12 IN_LIST Cuda_SUPPORTED_VERSIONS)
++    install(
++        PROGRAMS cuda12/${CMAKE_SYSTEM_PROCESSOR}/mnubergemm
++        DESTINATION ${DCGM_TESTS_INSTALL_DIR}/apps/nvvs/plugins/cuda12
++        COMPONENT Tests)
+ 
+-install(
+-    PROGRAMS cuda13/${CMAKE_SYSTEM_PROCESSOR}/mnubergemm
+-    DESTINATION ${DCGM_TESTS_INSTALL_DIR}/apps/nvvs/plugins/cuda13
+-    COMPONENT Tests)
++    install(
++        FILES cuda12/${CMAKE_SYSTEM_PROCESSOR}/libcurand.so.10.3.10.19
++        DESTINATION ${DCGM_TESTS_INSTALL_DIR}/apps/nvvs/plugins/cuda12
++        COMPONENT Tests)
+ 
+-install(
+-    FILES cuda12/${CMAKE_SYSTEM_PROCESSOR}/libcurand.so.10.3.10.19
+-    DESTINATION ${DCGM_TESTS_INSTALL_DIR}/apps/nvvs/plugins/cuda12
+-    COMPONENT Tests)
++    install(CODE "
++        file(RPATH_CHANGE
++            FILE \"\$ENV{DESTDIR}$<INSTALL_PREFIX>/${DCGM_TESTS_INSTALL_DIR}/apps/nvvs/plugins/cuda12/mnubergemm\"
++            OLD_RPATH \"::::::::::::::::::::::::::::::::::::::::::::::::::::\"
++            NEW_RPATH \"$ORIGIN:$ORIGIN/../../../${DCGM_TESTS_ARCH}\")
+ 
+-install(
+-    FILES cuda13/${CMAKE_SYSTEM_PROCESSOR}/libcurand.so.10.4.0.35
+-    DESTINATION ${DCGM_TESTS_INSTALL_DIR}/apps/nvvs/plugins/cuda13
+-    COMPONENT Tests)
++        execute_process(
++            COMMAND \"${CMAKE_COMMAND}\" -E create_symlink libcurand.so.10.3.10.19 libcurand.so.10
++            COMMAND \"${CMAKE_COMMAND}\" -E make_directory updated
++            WORKING_DIRECTORY \"\$ENV{DESTDIR}$<INSTALL_PREFIX>/${DCGM_TESTS_INSTALL_DIR}/apps/nvvs/plugins/cuda12\"
++            COMMAND_ERROR_IS_FATAL ANY)
+ 
+-install(CODE "
+-    file(RPATH_CHANGE
+-        FILE \"\$ENV{DESTDIR}$<INSTALL_PREFIX>/${DCGM_TESTS_INSTALL_DIR}/apps/nvvs/plugins/cuda12/mnubergemm\"
+-        OLD_RPATH \"::::::::::::::::::::::::::::::::::::::::::::::::::::\"
+-        NEW_RPATH \"$ORIGIN:$ORIGIN/../../../${DCGM_TESTS_ARCH}\")
++        execute_process(
++            COMMAND \"${CMAKE_COMMAND}\" -E create_symlink libcurand.so.10 libcurand.so
++            WORKING_DIRECTORY \"\$ENV{DESTDIR}$<INSTALL_PREFIX>/${DCGM_TESTS_INSTALL_DIR}/apps/nvvs/plugins/cuda12\"
++            COMMAND_ERROR_IS_FATAL ANY)
+ 
+-    file(RPATH_CHANGE
+-        FILE \"\$ENV{DESTDIR}$<INSTALL_PREFIX>/${DCGM_TESTS_INSTALL_DIR}/apps/nvvs/plugins/cuda13/mnubergemm\"
+-        OLD_RPATH \"::::::::::::::::::::::::::::::::::::::::::::::::::::\"
+-        NEW_RPATH \"$ORIGIN:$ORIGIN/../../../${DCGM_TESTS_ARCH}\")
++        execute_process(
++            COMMAND \"${CMAKE_COMMAND}\" -E create_symlink ../libcurand.so.10.3.10.19 libcurand.so.10
++            WORKING_DIRECTORY \"\$ENV{DESTDIR}$<INSTALL_PREFIX>/${DCGM_TESTS_INSTALL_DIR}/apps/nvvs/plugins/cuda12/updated\"
++            COMMAND_ERROR_IS_FATAL ANY)"
++        COMPONENT Tests)
++endif()
+ 
+-    execute_process(
+-        COMMAND \"${CMAKE_COMMAND}\" -E create_symlink libcurand.so.10.3.10.19 libcurand.so.10
+-        COMMAND \"${CMAKE_COMMAND}\" -E make_directory updated
+-        WORKING_DIRECTORY \"\$ENV{DESTDIR}$<INSTALL_PREFIX>/${DCGM_TESTS_INSTALL_DIR}/apps/nvvs/plugins/cuda12\"
+-        COMMAND_ERROR_IS_FATAL ANY)
++if(13 IN_LIST Cuda_SUPPORTED_VERSIONS)
++    install(
++        PROGRAMS cuda13/${CMAKE_SYSTEM_PROCESSOR}/mnubergemm
++        DESTINATION ${DCGM_TESTS_INSTALL_DIR}/apps/nvvs/plugins/cuda13
++        COMPONENT Tests)
+ 
+-    execute_process(
+-        COMMAND \"${CMAKE_COMMAND}\" -E create_symlink libcurand.so.10 libcurand.so
+-        WORKING_DIRECTORY \"\$ENV{DESTDIR}$<INSTALL_PREFIX>/${DCGM_TESTS_INSTALL_DIR}/apps/nvvs/plugins/cuda12\"
+-        COMMAND_ERROR_IS_FATAL ANY)
++    install(
++        FILES cuda13/${CMAKE_SYSTEM_PROCESSOR}/libcurand.so.10.4.0.35
++        DESTINATION ${DCGM_TESTS_INSTALL_DIR}/apps/nvvs/plugins/cuda13
++        COMPONENT Tests)
+ 
+-    execute_process(
+-        COMMAND \"${CMAKE_COMMAND}\" -E create_symlink ../libcurand.so.10.3.10.19 libcurand.so.10
+-        WORKING_DIRECTORY \"\$ENV{DESTDIR}$<INSTALL_PREFIX>/${DCGM_TESTS_INSTALL_DIR}/apps/nvvs/plugins/cuda12/updated\"
+-        COMMAND_ERROR_IS_FATAL ANY)
++    install(CODE "
++        file(RPATH_CHANGE
++            FILE \"\$ENV{DESTDIR}$<INSTALL_PREFIX>/${DCGM_TESTS_INSTALL_DIR}/apps/nvvs/plugins/cuda13/mnubergemm\"
++            OLD_RPATH \"::::::::::::::::::::::::::::::::::::::::::::::::::::\"
++            NEW_RPATH \"$ORIGIN:$ORIGIN/../../../${DCGM_TESTS_ARCH}\")
+ 
+-    execute_process(
+-        COMMAND \"${CMAKE_COMMAND}\" -E create_symlink libcurand.so.10.4.0.35 libcurand.so.10
+-        COMMAND \"${CMAKE_COMMAND}\" -E make_directory updated
+-        WORKING_DIRECTORY \"\$ENV{DESTDIR}$<INSTALL_PREFIX>/${DCGM_TESTS_INSTALL_DIR}/apps/nvvs/plugins/cuda13\"
+-        COMMAND_ERROR_IS_FATAL ANY)
++        execute_process(
++            COMMAND \"${CMAKE_COMMAND}\" -E create_symlink libcurand.so.10.4.0.35 libcurand.so.10
++            COMMAND \"${CMAKE_COMMAND}\" -E make_directory updated
++            WORKING_DIRECTORY \"\$ENV{DESTDIR}$<INSTALL_PREFIX>/${DCGM_TESTS_INSTALL_DIR}/apps/nvvs/plugins/cuda13\"
++            COMMAND_ERROR_IS_FATAL ANY)
+ 
+-    execute_process(
+-        COMMAND \"${CMAKE_COMMAND}\" -E create_symlink libcurand.so.10 libcurand.so
+-        WORKING_DIRECTORY \"\$ENV{DESTDIR}$<INSTALL_PREFIX>/${DCGM_TESTS_INSTALL_DIR}/apps/nvvs/plugins/cuda13\"
+-        COMMAND_ERROR_IS_FATAL ANY)
++        execute_process(
++            COMMAND \"${CMAKE_COMMAND}\" -E create_symlink libcurand.so.10 libcurand.so
++            WORKING_DIRECTORY \"\$ENV{DESTDIR}$<INSTALL_PREFIX>/${DCGM_TESTS_INSTALL_DIR}/apps/nvvs/plugins/cuda13\"
++            COMMAND_ERROR_IS_FATAL ANY)
+ 
+-    execute_process(
+-        COMMAND \"${CMAKE_COMMAND}\" -E create_symlink ../libcurand.so.10.4.0.35 libcurand.so.10
+-        WORKING_DIRECTORY \"\$ENV{DESTDIR}$<INSTALL_PREFIX>/${DCGM_TESTS_INSTALL_DIR}/apps/nvvs/plugins/cuda13/updated\"
+-        COMMAND_ERROR_IS_FATAL ANY)"
+-    COMPONENT Tests)
++        execute_process(
++            COMMAND \"${CMAKE_COMMAND}\" -E create_symlink ../libcurand.so.10.4.0.35 libcurand.so.10
++            WORKING_DIRECTORY \"\$ENV{DESTDIR}$<INSTALL_PREFIX>/${DCGM_TESTS_INSTALL_DIR}/apps/nvvs/plugins/cuda13/updated\"
++            COMMAND_ERROR_IS_FATAL ANY)"
++        COMPONENT Tests)
++endif()
+diff --git a/nvvs/plugin_src/CMakeLists.txt b/nvvs/plugin_src/CMakeLists.txt
+index 56420f1..9c6dd40 100644
+--- a/nvvs/plugin_src/CMakeLists.txt
++++ b/nvvs/plugin_src/CMakeLists.txt
+@@ -73,7 +73,7 @@ macro(define_plugin PLUGIN_NAME CUDA_VER)
+     target_link_libraries(nvvs_plugins INTERFACE "${PLUGIN_NAME}_${CUDA_VER}")
+ endmacro()
+ 
+-set(SUPPORTED_CUDA_VERSIONS 11 12 13)
++set(SUPPORTED_CUDA_VERSIONS ${Cuda_SUPPORTED_VERSIONS})
+ 
+ add_subdirectory(common)
+ add_subdirectory(contextcreate)
+diff --git a/nvvs/plugin_src/nvbandwidth/CMakeLists.txt b/nvvs/plugin_src/nvbandwidth/CMakeLists.txt
+index f3dacef..f5f3046 100644
+--- a/nvvs/plugin_src/nvbandwidth/CMakeLists.txt
++++ b/nvvs/plugin_src/nvbandwidth/CMakeLists.txt
+@@ -16,22 +16,14 @@ add_subdirectory(tests)
+ 
+ declare_nvvs_plugin(nvbandwidth .)
+ 
+-add_subdirectory(Cuda12)
+-add_subdirectory(Cuda13)
+-target_link_libraries(NVBandwidth_12 PRIVATE
+-    serialize
+-    fmt::fmt
+-    dcgm_common
+-    dcgm_logging
+-    Boost::stacktrace_basic
+-    dl
+-    rt)
+-
+-target_link_libraries(NVBandwidth_13 PRIVATE
+-    serialize
+-    fmt::fmt
+-    dcgm_common
+-    dcgm_logging
+-    Boost::stacktrace_basic
+-    dl
+-    rt)
++foreach(CUDA_VER IN LISTS SUPPORTED_CUDA_VERSIONS)
++    add_subdirectory(Cuda${CUDA_VER})
++    target_link_libraries(NVBandwidth_${CUDA_VER} PRIVATE
++        serialize
++        fmt::fmt
++        dcgm_common
++        dcgm_logging
++        Boost::stacktrace_basic
++        dl
++        rt)
++endforeach()
+-- 
+2.52.0
+

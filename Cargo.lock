@@ -27,6 +27,20 @@ name = "cuda-13"
 version = "0.1.0"
 
 [[package]]
+name = "dcgm"
+version = "0.1.0"
+dependencies = [
+ "cuda-13",
+ "libboost",
+ "libevent",
+ "libfmt",
+ "libjsoncpp",
+ "libplog-devel",
+ "libtclap-devel",
+ "libyamlcpp",
+]
+
+[[package]]
 name = "grub"
 version = "0.1.0"
 

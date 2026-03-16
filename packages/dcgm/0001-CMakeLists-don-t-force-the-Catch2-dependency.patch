@@ -1,0 +1,47 @@
+From 5525c66d149dd1810e77a41e40f3bb62a8ebeaf5 Mon Sep 17 00:00:00 2001
+From: Arnaldo Garcia Rincon <agarrcia@amazon.com>
+Date: Tue, 3 Mar 2026 17:56:11 +0000
+Subject: [PATCH] CMakeLists: don't force the Catch2 dependency
+
+Catch2 is only required when the tests are compiled, prevent requesting
+the library when testing is omitted
+
+Signed-off-by: Arnaldo Garcia Rincon <agarrcia@amazon.com>
+---
+ CMakeLists.txt | 11 ++++++++---
+ 1 file changed, 8 insertions(+), 3 deletions(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 9686398..c8c2692 100755
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -29,8 +29,12 @@ information. Otherwise, CTest must "scrape" the build output log for
+ diagnostics.
+ ]])
+ 
++include(CTest)
++
+ find_package(Boost REQUIRED COMPONENTS filesystem stacktrace_basic system)
+-find_package(Catch2 REQUIRED)
++if(BUILD_TESTING)
++    find_package(Catch2 REQUIRED)
++endif()
+ find_package(Cuda REQUIRED)
+ find_package(fmt REQUIRED)
+ find_package(Git REQUIRED)
+@@ -42,9 +46,10 @@ find_package(Threads REQUIRED)
+ find_package(TCLAP REQUIRED)
+ find_package(Yaml REQUIRED)
+ 
+-include(Catch)
++if(BUILD_TESTING)
++    include(Catch)
++endif()
+ include(CMakePackageConfigHelpers)
+-include(CTest)
+ include(GNUInstallDirs)
+ 
+ set(DCGM_CONFIG_REVISION 0)
+-- 
+2.52.0
+
