@@ -76,6 +76,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "libevent"
+version = "0.1.0"
+
+[[package]]
 name = "libkcapi"
 version = "0.1.0"
 

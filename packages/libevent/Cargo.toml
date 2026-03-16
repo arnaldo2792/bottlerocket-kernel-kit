@@ -1,0 +1,19 @@
+[package]
+name = "libevent"
+version = "0.1.0"
+edition = "2021"
+publish = false
+build = "../build.rs"
+
+[lib]
+path = "../packages.rs"
+
+[package.metadata.build-package]
+releases-url = "https://github.com/libevent/libevent/tags"
+
+[[package.metadata.build-package.external-files]]
+url = "https://github.com/libevent/libevent/archive/release-2.1.12-stable/libevent-release-2.1.12-stable.tar.gz"
+path = "libevent-release-2.1.12-stable.tar.gz"
+sha512 = "5d6c6f0072f69a68b190772d4c973ce8f33961912032cdc104ad0854c0950f9d7e28bc274ca9df23897937f0cd8e45d1f214543d80ec271c5a6678814a7f195e"
+
+[build-dependencies]

@@ -16,5 +16,6 @@ members = [
     "packages/microcode",
     "packages/libkcapi",
     "packages/shim",
+    "packages/libevent",
 ]
 exclude = ["sources"]
