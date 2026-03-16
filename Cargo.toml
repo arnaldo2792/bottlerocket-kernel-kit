@@ -17,5 +17,6 @@ members = [
     "packages/libkcapi",
     "packages/shim",
     "packages/libevent",
+    "packages/libjsoncpp",
 ]
 exclude = ["sources"]
