@@ -114,6 +114,10 @@ name = "libkcapi"
 version = "0.1.0"
 
 [[package]]
+name = "libnuma"
+version = "0.1.0"
+
+[[package]]
 name = "libnvidia-nscq-580"
 version = "0.1.0"
 

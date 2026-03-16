@@ -24,6 +24,7 @@ members = [
     "packages/libplog-devel",
     "packages/libtclap-devel",
     "packages/cuda-13",
+    "packages/libnuma",
     "packages/libnvidia-nscq-580",
     "packages/dcgm",
 ]

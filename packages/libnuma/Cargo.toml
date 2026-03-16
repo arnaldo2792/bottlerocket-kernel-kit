@@ -1,0 +1,19 @@
+[package]
+name = "libnuma"
+version = "0.1.0"
+edition = "2021"
+publish = false
+build = "../build.rs"
+
+[lib]
+path = "../packages.rs"
+
+[package.metadata.build-package]
+releases-url = "https://github.com/numactl/numactl/tags"
+
+[[package.metadata.build-package.external-files]]
+url = "https://github.com/numactl/numactl/archive/v2.0.19/numactl-v2.0.19.tar.gz"
+path = "numactl-v2.0.19.tar.gz"
+sha512 = "a9aa93bdc6333b620c10ff3573d6ff645ab54beece75e67be8cdddb27d062cc56cea34db342005a171877f85f05eb1d24e43f8466be907ba3b7c8b1f897cd954"
+
+[build-dependencies]
