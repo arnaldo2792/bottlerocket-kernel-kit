@@ -6,6 +6,7 @@ version = 4
 name = "bottlerocket-kernel-kit"
 version = "0.1.0"
 dependencies = [
+ "dcgm",
  "grub",
  "kernel-6_1",
  "kernel-6_12",
@@ -15,6 +16,8 @@ dependencies = [
  "kmod-6_12-efa",
  "kmod-6_12-nvidia-r580",
  "libkcapi",
+ "libnuma",
+ "libnvidia-nscq-580",
  "linux-firmware",
  "microcode",
  "nvidia-migmanager",

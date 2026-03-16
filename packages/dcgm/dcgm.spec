@@ -75,7 +75,8 @@ sed -i -e 's/-Wl,--as-needed//g' \
 # Relax compiler errors on warnings
 # TODO: The DCGM sources have too many compiler violations, some of them were
 # fixed. 
-sed -i 's/-Werror=format-security/-Wno-format-security -Wno-unused-result/g' \
+sed -i -e 's/-Werror=format-security/-Wno-format-security -Wno-unused-result/g' \
+  -e 's/CMAKE_CXX_FLAGS_RELEASE "-DNDEBUG"/CMAKE_CXX_FLAGS_RELEASE "-DNDEBUG -Wno-range-loop-construct"/g' \
   %_cross_cmake_toolchain_conf
 
 %build
@@ -92,7 +93,6 @@ CMAKE_TOOLCHAIN_FILE="%{_cross_cmake_toolchain_conf}" \
     -DSHARE_INSTALL_PREFIX:PATH=%{_cross_datadir} \
     -DCMAKE_INSTALL_PREFIX:PATH=%{_cross_prefix} \
     -DCUDA_ROOT=%{_cross_libdir}/cuda \
-    -DBUILD_SHARED_LIBS:BOOL=ON \
     -DDCGM_BUILD_MULTINODE:BOOL=OFF \
     -DBUILD_TESTING:BOOL=OFF \
     -G Ninja

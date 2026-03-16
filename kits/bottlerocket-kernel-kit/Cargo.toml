@@ -26,4 +26,7 @@ linux-firmware = { path = "../../packages/linux-firmware" }
 microcode = { path = "../../packages/microcode" }
 libkcapi = { path = "../../packages/libkcapi" }
 shim = { path = "../../packages/shim" }
+dcgm = { path = "../../packages/dcgm" }
+libnuma = { path = "../../packages/libnuma" }
+libnvidia-nscq-580 = { path = "../../packages/libnvidia-nscq-580" }
 
