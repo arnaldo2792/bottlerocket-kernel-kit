@@ -24,5 +24,6 @@ members = [
     "packages/libplog-devel",
     "packages/libtclap-devel",
     "packages/cuda-13",
+    "packages/libnvidia-nscq-580",
 ]
 exclude = ["sources"]

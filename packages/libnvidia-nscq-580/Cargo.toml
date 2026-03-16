@@ -1,0 +1,27 @@
+[package]
+name = "libnvidia-nscq-580"
+version = "0.1.0"
+edition = "2021"
+publish = false
+build = "../build.rs"
+
+[lib]
+path = "../packages.rs"
+
+[package.metadata.build-package]
+package-name = "libnvidia-nscq-580"
+releases-url = "https://developer.nvidia.com/cuda-toolkit-archive"
+
+[[package.metadata.build-package.external-files]]
+url = "https://developer.download.nvidia.com/compute/cuda/repos/amzn2023/sbsa/libnvidia-nscq-580.95.05-1.aarch64.rpm"
+sha512 = "4a9bd417700d697879210470da4263755378bb4f6bbbeeb2d18702185696e1d2f1be806401931bfc717b6e4a4925f629f8bc185d85a831cc7a7d318063ce4879"
+force-upstream = true
+
+[[package.metadata.build-package.external-files]]
+url = "https://developer.download.nvidia.com/compute/cuda/repos/amzn2023/x86_64/libnvidia-nscq-580.95.05-1.x86_64.rpm"
+sha512 = "dced855f29928b5be728aa5ae6abe35709c7d90195eba96b40cbdca5658e66a72cdbe9662442a20a26d79326b80bd3e93a95ea4e12e157ca6470cb650dc699af"
+force-upstream = true
+
+[[package.metadata.build-package.external-files]]
+url = "https://s3.amazonaws.com/EULA/NVidiaEULAforAWS.pdf"
+sha512 = "e1926fe99afc3ab5b2f2744fcd53b4046465aefb2793e2e06c4a19455a3fde895e00af1415ff1a5804c32e6a2ed0657e475de63da6c23a0e9c59feeef52f3f58"
