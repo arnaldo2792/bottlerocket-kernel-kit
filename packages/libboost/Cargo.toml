@@ -1,0 +1,19 @@
+[package]
+name = "libboost"
+version = "0.1.0"
+edition = "2021"
+publish = false
+build = "../build.rs"
+
+[lib]
+path = "../packages.rs"
+
+[package.metadata.build-package]
+releases-url = "https://github.com/boostorg/boost/tags"
+
+[[package.metadata.build-package.external-files]]
+url = "https://github.com/boostorg/boost/releases/download/boost-1.85.0/boost-1.85.0-cmake.tar.gz"
+path = "boost-1.85.0-cmake.tar.gz"
+sha512 = "4943f50771092d06a93e6c983aaa3423d515390a40aab70f2bfb28edcc1929714ffeb689c577ad3d77c384eff4d1e58e73dfbf44351f69037c40d9123761e2ef"
+
+[build-dependencies]

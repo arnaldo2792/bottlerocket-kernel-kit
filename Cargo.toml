@@ -20,5 +20,6 @@ members = [
     "packages/libjsoncpp",
     "packages/libyamlcpp",
     "packages/libfmt",
+    "packages/libboost",
 ]
 exclude = ["sources"]
