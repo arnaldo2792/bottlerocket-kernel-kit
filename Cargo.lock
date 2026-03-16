@@ -88,6 +88,10 @@ name = "libkcapi"
 version = "0.1.0"
 
 [[package]]
+name = "libyamlcpp"
+version = "0.1.0"
+
+[[package]]
 name = "linux-firmware"
 version = "0.1.0"
 
